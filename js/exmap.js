@@ -5,6 +5,7 @@ window.onload = (e) => {
     let ovrly = document.getElementById('overlay');
     ovrly.style.display = 'none';
     ovrly.addEventListener("click", function() {ovrly.style.display = "none";});
+    document.getElementById('overlay_img').click(function(e) { e.stopPropagation(); });
 };
 
 EM.loadData = function()
@@ -76,7 +77,11 @@ EM.displayMap = function()
 };
 
 EM.showPic = function(fn) {
+    let overimg = document.getElementById('overlay_img');
+    overimg.innerHTML = '<img src="photos/georef/' + fn + '" title="Hide">';
     let over = document.getElementById('overlay');
-    over.innerHTML = '<img src="photos/georef/' + fn + '">';
     over.style.display = '';
+
+    let fsimg = document.getElementById('full_screen_link');
+    fsimg.innerHTML = '<a href="photos/georef/' + fn + '" target="_blank" title="See full screen">+</a>';
 };

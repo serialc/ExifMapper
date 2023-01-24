@@ -6,8 +6,8 @@
 	<title>Exif Mapper</title>
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""></script>
+    <link rel="stylesheet" href="css/leaflet.css">
+    <script src="js/leaflet.js"></script>
 
     <style>
     html, body {
@@ -37,11 +37,37 @@
         max-width: 46vw;
         opacity: 1;
     }
+    #full_screen_link {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+        background: white;
+        padding: 5px;
+        border-radius: 3px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        opacity: 0.7;
+    }
+    #full_screen_link:hover {
+        opacity: 1;
+    }
+    #full_screen_link a {
+        text-decoration: none;
+    }
+    #overlay_img, #full_screen_link {
+        cursor: pointer;
+    }
 </style>
 </head>
 <body>
     <div id="map"></div>
-    <div id="overlay"></div>
-    <script src="exmap.js"></script>
+    <div id="overlay">
+        <div id="overlay_btns">
+            <div id="full_screen_link">+</div>
+        </div>
+        <div id="overlay_img"></div>
+    </div>
+    <script src="js/exmap.js"></script>
 </body>
 </html>
