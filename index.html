@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="css/leaflet.css">
     <script src="js/leaflet.js"></script>
 
+    <link href="/css/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+
     <style>
     html, body {
         height: 100%;
@@ -40,20 +42,24 @@
     #full_screen_link {
         position: absolute;
         top: 20px;
-        right: 20px;
+        left: 20px;
         z-index: 10;
         background: white;
         padding: 5px;
         border-radius: 3px;
-        font-size: 1.2rem;
         font-weight: bold;
         opacity: 0.7;
+        font-size: 1.3rem;
+        transition: font-size 0.5s, opacity 0.5s;
     }
     #full_screen_link:hover {
         opacity: 1;
+        font-size: 2rem;
     }
     #full_screen_link a {
         text-decoration: none;
+        margin: 0 4px;
+        color: black;
     }
     #overlay_img, #full_screen_link {
         cursor: pointer;

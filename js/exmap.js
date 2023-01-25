@@ -10,7 +10,7 @@ window.onload = (e) => {
 
 EM.loadData = function()
 {
-    fetch('photos/data.csv')
+    fetch('photos/data.csv', {cache: "reload"})
     .then(function(response) { return response.text(); })
     .then(function(data) {
         let rdata = data.split('\n')
@@ -83,5 +83,5 @@ EM.showPic = function(fn) {
     over.style.display = '';
 
     let fsimg = document.getElementById('full_screen_link');
-    fsimg.innerHTML = '<a href="photos/georef/' + fn + '" target="_blank" title="See full screen">+</a>';
+    fsimg.innerHTML = '<a href="photos/georef/' + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
 };
