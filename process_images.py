@@ -14,11 +14,15 @@ geoloc = base_dir + "georef/"
 noloc = base_dir + "noloc/"
 data_file = base_dir + "data.csv"
 
+c_processed = 0
+c_noloc = 0
+c_georef = 0
+
 # list the contents of photo_path
 # for each image get the exif
 for p in os.listdir(photo_path):
     pp = photo_path + p
-    print("Processing " + pp)
+    #print("Processing " + pp)
 
     # record data in data file
     if not os.path.exists(data_file):
@@ -51,15 +55,23 @@ for p in os.listdir(photo_path):
             # move photo files
             if coords[0] is None or coords[1] is None:
                 print("Has no coordinates")
+                # count 
+                c_noloc += 1
                 if not os.path.exists(noloc):
                     os.makedirs(noloc)
                 # no location info
                 os.rename(pp, noloc + p)
             else:
-                print("Moved. Has coordinates", coords)
+                #print("Moved. Has coordinates", coords)
+                # count 
+                c_georef += 1
+
                 if not os.path.exists(geoloc):
                     os.makedirs(geoloc)
                 os.rename(pp, geoloc + p)
 
                 df.write(p + ',' + str(coords[0]) + ',' + str(coords[1]) + '\n')
+
+    # count photos processed
+    c_processed += 1
 

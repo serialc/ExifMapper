@@ -20,7 +20,7 @@
         width: 100%;
         height: 100%;
     }
-    #overlay {
+    #overlay, #files_overlay {
         max-width: 46vw;
         max-height: 90vh;
         z-index: 1000;
@@ -32,6 +32,13 @@
         padding: 1em;
         border-radius: 5px;
         opacity: 1;
+    }
+    #files_overlay {
+        top: unset;
+        right: unset;
+        left: 9px;
+        bottom: 10px;
+        max-height: 80vh;
     }
     #overlay img {
         top: 5vh;
@@ -64,10 +71,21 @@
     #overlay_img, #full_screen_link {
         cursor: pointer;
     }
+    video {
+        width: 100%;
+    }
 </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="files_overlay">
+        Georeference the following files:
+        <div id="fo_files">
+            List
+        </div>
+        <div id="fo_img">
+        </div>
+    </div>
     <div id="overlay">
         <div id="overlay_btns">
             <div id="full_screen_link">+</div>

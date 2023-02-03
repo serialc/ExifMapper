@@ -6,6 +6,40 @@ window.onload = (e) => {
     ovrly.style.display = 'none';
     ovrly.addEventListener("click", function() {ovrly.style.display = "none";});
     document.getElementById('overlay_img').click(function(e) { e.stopPropagation(); });
+
+    let fo = document.getElementById('files_overlay');
+    fo.style.display = 'none';
+    EM.loadNoLoc();
+};
+
+EM.loadNoLoc = function()
+{
+    fetch('php/api.php?req=noloclist', {cache: "reload"})
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        let fo = document.getElementById('files_overlay');
+        fo.style.display = '';
+        let fof = document.getElementById('fo_files');
+
+        let html_list = "";
+        for (let i in data) {
+            let ftype = data[i].split('.')[1];
+            let img_ftypes = ['png', 'jpg', 'gif'];
+            if (img_ftypes.includes(ftype.toLowerCase())) {
+                html_list += '<a href="#" onclick="EM.showPic(\'photos/noloc/\', \'' + data[i] + '\')">' + data[i] + "</a><br>";
+            }
+            let vid_ftypes = ['mp4'];
+            if (vid_ftypes.includes(ftype.toLowerCase())) {
+                html_list += '<a href="#" onclick="EM.showPic(\'photos/noloc/\', \'' + data[i] + '\', \'vid\')">' + data[i] + "</a><br>";
+            }
+        }
+        fof.innerHTML = html_list;
+    });
+};
+
+EM.georefImg = function(imgfn)
+{
+
 };
 
 EM.loadData = function()
@@ -67,7 +101,7 @@ EM.displayMap = function()
 
         let marker = new L.marker([p[1], p[2]], {
             // options
-        }).on('click', function() { EM.showPic(p[0]) });
+        }).on('click', function() { EM.showPic("photos/georef/", p[0]) });
 
         markers.push(marker);
     }
@@ -76,12 +110,27 @@ EM.displayMap = function()
     EM.map.fitBounds(group.getBounds());
 };
 
-EM.showPic = function(fn) {
+EM.showPic = function(fp, fn, rtype='img', actions=true) {
     let overimg = document.getElementById('overlay_img');
-    overimg.innerHTML = '<img src="photos/georef/' + fn + '" title="Hide">';
+    oihtml = '';
+
+    if (rtype === 'vid') {
+        oihtml += '<video controls><source src="' + fp + fn + '" type="video/mp4"></video>';
+    }
+    if (rtype === 'img') {
+        oihtml += '<img src="' + fp + fn + '" title="Hide">';
+    }
+
+    if (actions) {
+        oihtml += '<div>Delete - (re)Locate</div>';
+    }
+
+    // add the overlay content
+    overimg.innerHTML = oihtml;
+
     let over = document.getElementById('overlay');
     over.style.display = '';
 
     let fsimg = document.getElementById('full_screen_link');
-    fsimg.innerHTML = '<a href="photos/georef/' + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
+    fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
 };
