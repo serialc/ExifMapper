@@ -4,13 +4,23 @@ window.onload = (e) => {
     EM.loadData();
     let ovrly = document.getElementById('overlay');
     ovrly.style.display = 'none';
-    ovrly.addEventListener("click", function() {ovrly.style.display = "none";});
-    document.getElementById('overlay_img').click(function(e) { e.stopPropagation(); });
+
+    let ovrly_img = document.getElementById('overlay_img')
+    ovrly_img.addEventListener("click", (e) => {
+        ovrly.style.display = "none";
+        e.stopPropagation();
+    });
 
     let fo = document.getElementById('files_overlay');
     fo.style.display = 'none';
     EM.loadNoLoc();
 };
+
+EM.mapClick = function(e)
+{
+    console.log(e);
+    alert("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng);
+}
 
 EM.loadNoLoc = function()
 {
@@ -80,6 +90,9 @@ EM.loadData = function()
 
         // now show the map
         EM.displayMap();
+
+        // capture map clicks
+        EM.map.on('click', EM.mapClick);
     })
 };
 
@@ -121,16 +134,43 @@ EM.showPic = function(fp, fn, rtype='img', actions=true) {
         oihtml += '<img src="' + fp + fn + '" title="Hide">';
     }
 
-    if (actions) {
-        oihtml += '<div>Delete - (re)Locate</div>';
-    }
-
     // add the overlay content
     overimg.innerHTML = oihtml;
+
+    if (actions) {
+        document.getElementById('overlay_buttons').innerHTML = '<div><button onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button> <button>(re)Locate</button></div>';
+    }
 
     let over = document.getElementById('overlay');
     over.style.display = '';
 
     let fsimg = document.getElementById('full_screen_link');
     fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
+
+    let clsimg = document.getElementById('close_overlay_link');
+    clsimg.innerHTML = '<i class="fa fa-close"></i>';
+    clsimg.addEventListener("click", (e) => {
+        over.style.display = "none";
+    });
+};
+
+EM.deletePrompt = function(fp, fn)
+{
+    if (confirm("Are you sure you want to delete this image or resource?")) {
+        // delete (but actually just move) the image (to the garbage)
+        fetch('php/api.php?req=delete_rsc&fp=' + fp + '&fn=' + fn, {cache: "reload"})
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data === 'good') {
+                // update list of files or map
+                EM.loadNoLoc();
+                // hide the overlay
+                let over = document.getElementById('overlay');
+                over.style.display = 'none';
+            }
+            if (data === 'bad') {
+                console.log(data);
+            }
+        });
+    }
 };
