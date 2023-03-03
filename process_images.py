@@ -27,7 +27,7 @@ for p in os.listdir(photo_path):
     # record data in data file
     if not os.path.exists(data_file):
         with open(data_file, 'w') as df:
-            df.write("fn,lat,lng\n")
+            df.write("fn,lat,lng,type\n")
             df.close()
 
     with open(data_file, 'a') as df:
@@ -70,7 +70,8 @@ for p in os.listdir(photo_path):
                     os.makedirs(geoloc)
                 os.rename(pp, geoloc + p)
 
-                df.write(p + ',' + str(coords[0]) + ',' + str(coords[1]) + '\n')
+                # type is not defined - just a placeholder
+                df.write(p + ',' + str(coords[0]) + ',' + str(coords[1]) + ',\n')
 
     # count photos processed
     c_processed += 1

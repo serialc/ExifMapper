@@ -24,10 +24,56 @@ case 'delete_rsc':
     }
     break;
 
+case 'change_type':
+    $fn = $_GET['fn'];
+    $rtype = $_GET['rtype'];
+
+    // update data file
+    if (changeResourceType($fn, $rtype)) {
+        print(buildResponse([
+            "response" => "good",
+            "photos" => file_get_contents(DATA_FILE)
+        ]));
+    } else {
+        print(buildResponse(["response" => "bad"]));
+    }
+    break;
+
+case 'relocate':
+    $fn = $_GET['fn'];
+    $lat = $_GET['lat'];
+    $lng = $_GET['lng'];
+
+    // if this file hasn't been georeference
+    if (strcmp($_GET['fp'], 'photos/noloc/') === 0) {
+        if (georeferencePhoto($fn, $lat, $lng)) {
+            print(buildResponse([
+                "response" => "good",
+                "photos" => file_get_contents(DATA_FILE),
+                "noloc" => getNolocFilesList()
+            ]));
+        } else {
+            print(buildResponse(["response" => "bad"]));
+        }
+    }
+    // file needs change its location - edit data file
+    if (strcmp($_GET['fp'], 'photos/georef/') === 0) {
+        if (reGeoreferencePhoto($fn, $lat, $lng)) {
+            print(buildResponse([
+                "response" => "good",
+                "photos" => file_get_contents(DATA_FILE),
+                "noloc" => getNolocFilesList()
+            ]));
+        } else {
+            print(buildResponse(["response" => "bad"]));
+        }
+    }
+
+    break;
+
 case 'noloclist':
     // list the files in ../photos/noloc
-    $imgs = array_diff(scandir('../photos/noloc/'), array('.','..'));
-    print(buildResponse($imgs));
+    print(buildResponse(getNolocFilesList()));
     break;
 
 default:
