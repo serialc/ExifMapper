@@ -5,11 +5,11 @@ window.onload = (e) => {
     let ovrly = document.getElementById('overlay');
     ovrly.style.display = 'none';
 
-    let ovrly_img = document.getElementById('overlay_img')
+    /*let ovrly_img = document.getElementById('overlay_img')
     ovrly_img.addEventListener("click", (e) => {
         ovrly.style.display = "none";
         e.stopPropagation();
-    });
+    });*/
 
     let fo = document.getElementById('files_overlay');
     fo.style.display = 'none';
@@ -61,9 +61,29 @@ EM.submitResourceType = function(fn, rtype)
 
 EM.relocatePhoto = function(fp, fn)
 {
-    // set cursor on map as crosshair
+    let reloc_btn = document.getElementById('btn_change_location');
     let mapcont = document.getElementById('map');
+    let btn_alt_text = 'Click map or here to cancel';
+
+    // provide feedback and allow toggle
+    if (reloc_btn.innerHTML === btn_alt_text) {
+        reloc_btn.innerHTML = '(re)Locate';
+        // deactivate next map click
+        EM.onMapClick = undefined;
+        // remove crosshair cursor styling
+        mapcont.classList.remove('crosshair');
+        return;
+    } else {
+        reloc_btn.innerHTML = btn_alt_text;
+    }
+
+    // set cursor on map as crosshair
     mapcont.classList.add('crosshair');
+
+    // hide the overlay?
+    //let ovrly = document.getElementById('overlay');
+    //ovrly.style.display = 'none';
+
 
     // on the map click do the following
     EM.onMapClick = function(e) {
@@ -243,18 +263,28 @@ EM.showPic = function(fp, fn, rtype='img', actions='all')
     if (rtype === 'img') {
         oihtml += '<img src="' + fp + fn + '" title="Hide">';
     }
+    if (rtype === '360') {
+        oihtml += '<div id="viewer360" style="width: 60vw; height: 60vh;"></div>';
+    }
 
     // add the overlay content
     document.getElementById('overlay_img').innerHTML = oihtml;
 
+    if (rtype === '360') {
+        const viewer = new PhotoSphereViewer.Viewer({
+            container: document.querySelector('#viewer360'),
+            panorama: fp + fn,
+        });
+    }
+
     let btns_html = '';
     if (['all', 'deloc'].includes(actions)) {
         btns_html =
-            '<div><button class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button> ' +
-            '<button class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
+            '<div><button id="btn_delete_resource" class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button> ' +
+            '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
     }
     if (actions === 'all') {
-        btns_html += ' <button class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Change type</button> <span id="more_buttons"></span></div>';
+        btns_html += ' <button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Change type</button> <span id="more_buttons"></span></div>';
     }
     document.getElementById('overlay_buttons').innerHTML = btns_html;
 
@@ -262,8 +292,14 @@ EM.showPic = function(fp, fn, rtype='img', actions='all')
     let over = document.getElementById('overlay');
     over.style.display = '';
 
+    // only allow fullscreen for non-360 resources
     let fsimg = document.getElementById('full_screen_link');
-    fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
+    if (rtype === '360') {
+        fsimg.style.display = 'none';
+    } else {
+        fsimg.style.display = '';
+        fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
+    }
 
     let clsimg = document.getElementById('close_overlay_link');
     clsimg.innerHTML = '<i class="fa fa-close" title="Close"></i>';
