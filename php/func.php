@@ -58,7 +58,7 @@ function georeferencePhoto($fn, $lat, $lng)
     // we want to append a line to data file
     file_put_contents(
         DATA_FILE,
-        "\n" . $fn . ',' . $lat . ',' . $lng . ',',
+        "\n" . $fn . ',' . $lat . ',' . $lng . ',,',
         // append and lock file
         FILE_APPEND | LOCK_EX
     );
@@ -83,7 +83,34 @@ function reGeoreferencePhoto($fn, $lat, $lng)
         // update target line
         if (strcmp($p[0], $fn) === 0) {
             // write new data - copy over the file type
-            $out .= $fn . ',' . $lat . ',' . $lng . ',' . $p[3] . "\n";
+            $out .= $fn . ',' . $lat . ',' . $lng . ',' . $p[3] . ',' . $p[4] . "\n";
+        } else {
+            // add other lines
+            $out .= $line . "\n";
+        }
+    }
+
+    file_put_contents(DATA_FILE, $out, LOCK_EX);
+    return true;
+}
+
+function changeResourceComment($fn, $com)
+{
+    // update data file
+    $data = explode("\n", file_get_contents(DATA_FILE));
+    $out = '';
+
+    foreach ($data as $line) {
+        // skip empty lines
+        if ($line === '') { continue; }
+
+        // get the parts
+        $p = explode(',', $line);
+        
+        // update target line
+        if (strcmp($p[0], $fn) === 0) {
+            // write new data - copy over the file type
+            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $p[3] . ',' . $com . "\n";
         } else {
             // add other lines
             $out .= $line . "\n";
@@ -110,7 +137,7 @@ function changeResourceType($fn, $rtype)
         // update target line
         if (strcmp($p[0], $fn) === 0) {
             // write new data - copy over the file type
-            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $rtype . "\n";
+            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $rtype . ',' . $p[4] . "\n";
         } else {
             // add other lines
             $out .= $line . "\n";

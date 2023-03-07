@@ -14,6 +14,28 @@ window.onload = (e) => {
     let fo = document.getElementById('files_overlay');
     fo.style.display = 'none';
     EM.loadNoLoc();
+
+    // websockets connection - this could cause an error but there's nothing to catch see:
+    // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation
+    // This is fine though - everything (except the websocket) still works
+    var conn = new WebSocket('ws://localhost:8080');
+    conn.onopen = function(e) {
+        console.log("Connection established!");
+    };
+
+    conn.onmessage = function(e) {
+        switch (e.data) {
+            case 'reload_data':
+                EM.loadData();
+                EM.loadNoLoc();
+                break;
+
+            default:
+                console.log("Command not known");
+                break;
+        }
+    };
+    EM.conn = conn;
 };
 
 EM.mapClick = function(e)
@@ -22,6 +44,50 @@ EM.mapClick = function(e)
     if (EM.onMapClick) {
         EM.onMapClick(e);
     }
+};
+
+EM.displayEditableComment = function(fn)
+{
+    let btn = document.getElementById('btn_change_comment');
+    let oc = document.getElementById('overlay_comment');
+    let oci = document.getElementById('overlay_comment_input');
+
+    if (oc.style.display === 'none') {
+        // show the comment
+        oc.style.display = '';
+        oc.innerHTML = oci.value;
+        oci.style.display = 'none';
+        btn.innerHTML = "Comment";
+
+        // do this
+        // Save the input - fetch
+        // convert any ',' to ' -'
+        oci.value.replace(',', ' -');
+        fetch('php/api.php?req=change_comment&fn=' + fn + '&comment=' + oci.value, {cache: "reload"})
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                // refresh markers
+                if (data.response === 'good') {
+                    // send message to server to push updates to other clients
+                    if (EM.conn) {
+                        EM.conn.send('reload_data');
+                    }
+                }
+                if (data.response === 'bad') {
+                    console.log(data);
+                }
+            });
+    } else {
+        // show the input field
+        oc.style.display = 'none';
+        oci.style.display = '';
+        oci.value = oc.innerHTML;
+        oci.focus();
+        // put cursor at end of input
+        oci.selectionStart = oci.value.length;
+        btn.innerHTML = "Save";
+    }
+
 };
 
 EM.changeResourceType = function(fn)
@@ -34,9 +100,9 @@ EM.changeResourceType = function(fn)
     }
     // show buttons
     mb.innerHTML =
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')">Image</button> ' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')">Img</button> ' +
         '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'360\')">360</button> ' +
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')">Video</button> ';
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')">Vid</button> ';
 };
 
 EM.submitResourceType = function(fn, rtype)
@@ -52,6 +118,11 @@ EM.submitResourceType = function(fn, rtype)
             // hide the overlay
             let over = document.getElementById('overlay');
             over.style.display = 'none';
+
+            // send message to server to push updates to other clients
+            if (EM.conn) {
+                EM.conn.send('reload_data');
+            }
         }
         if (data.response === 'bad') {
             console.log(data);
@@ -106,6 +177,11 @@ EM.relocatePhoto = function(fp, fn)
                 // hide the overlay
                 let over = document.getElementById('overlay');
                 over.style.display = 'none';
+
+                // send message to server to push updates to other clients
+                if (EM.conn) {
+                    EM.conn.send('reload_data');
+                }
             }
             if (data.response === 'bad') {
                 console.log(data);
@@ -133,7 +209,7 @@ EM.parseNolocData = function(data)
 
     let html_list = "";
     for (let i in data) {
-        html_list += '<a href="#" onclick="EM.showPic(\'photos/noloc/\', \'' + data[i] + '\',\'\',\'deloc\')">' + data[i] + "</a><br>";
+        html_list += '<a href="#" onclick="EM.showPic(\'photos/noloc/\', \'' + data[i] + '\',\'\',\'\',\'deloc\')">' + data[i] + "</a><br>";
     }
 
     // fill in the container of noloc files
@@ -193,17 +269,25 @@ EM.loadData = function()
 
 EM.displayMap = function()
 {
-    EM.map = L.map('map').setView(EM.mean_ll, 10);
+    // if the map already exists then don't create it
+    if (!EM.map) {
+        EM.map = L.map('map').setView(EM.mean_ll, 10);
 
-    let tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-        id: 'mapbox/satellite-v9',
-        accessToken: "pk.eyJ1IjoiY3lyaWxsZW1kYyIsImEiOiJjazIwamZ4cXIwMzN3M2hscmMxYjgxY2F5In0.0BmIVj6tTvXVd2BmmFo6Nw",
-        attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 20, 
-    }).addTo(EM.map);
+        let tiles = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+            {
+                id: 'mapbox/satellite-v9',
+                accessToken: "pk.eyJ1IjoiY3lyaWxsZW1kYyIsImEiOiJjazIwamZ4cXIwMzN3M2hscmMxYjgxY2F5In0.0BmIVj6tTvXVd2BmmFo6Nw",
+                attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 20, 
+            }
+        ).addTo(EM.map);
 
-    // add makers
-    EM.updateMarkers(true);
+        // add makers and refocus
+        EM.updateMarkers(true);
+    } else {
+        // update markers - no refocus
+        EM.updateMarkers(false);
+    }
 };
 
 EM.updateMarkers = function(reframe=false)
@@ -220,7 +304,7 @@ EM.updateMarkers = function(reframe=false)
 
         let marker = new L.marker([p[1], p[2]], {
             // options
-        }).on('click', function() { EM.showPic("photos/georef/", p[0], p[3]) });
+        }).on('click', function() { EM.showPic("photos/georef/", p[0], p[3], p[4]) });
 
         markers.push(marker);
     }
@@ -236,7 +320,7 @@ EM.updateMarkers = function(reframe=false)
     }
 };
 
-EM.showPic = function(fp, fn, rtype='img', actions='all')
+EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
 {
     // override rtype when empty, ''
     if (rtype === '') {
@@ -261,7 +345,7 @@ EM.showPic = function(fp, fn, rtype='img', actions='all')
         oihtml += '<video controls><source src="' + fp + fn + '" type="video/mp4"></video>';
     }
     if (rtype === 'img') {
-        oihtml += '<img src="' + fp + fn + '" title="Hide">';
+        oihtml += '<img src="' + fp + fn + '">';
     }
     if (rtype === '360') {
         oihtml += '<div id="viewer360" style="width: 60vw; height: 60vh;"></div>';
@@ -277,6 +361,12 @@ EM.showPic = function(fp, fn, rtype='img', actions='all')
         });
     }
 
+    if (comment !== '') {
+        document.getElementById('overlay_comment').innerHTML = comment;
+    } else {
+        document.getElementById('overlay_comment').innerHTML = '';
+    }
+
     let btns_html = '';
     if (['all', 'deloc'].includes(actions)) {
         btns_html =
@@ -284,8 +374,10 @@ EM.showPic = function(fp, fn, rtype='img', actions='all')
             '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
     }
     if (actions === 'all') {
-        btns_html += ' <button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Change type</button> <span id="more_buttons"></span></div>';
+        btns_html += ' <button id="btn_change_comment" class="btn btn-success" onclick="EM.displayEditableComment(\'' + fn + '\')">Comment</button>';
+        btns_html += ' <button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Type</button> <span id="more_buttons"></span>';
     }
+    btns_html += '</div>';
     document.getElementById('overlay_buttons').innerHTML = btns_html;
 
 
@@ -316,11 +408,18 @@ EM.deletePrompt = function(fp, fn)
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data === 'good') {
-                // update list of files or map
+                // update list of files and mapped markers
                 EM.loadNoLoc();
+                EM.loadData();
+
                 // hide the overlay
                 let over = document.getElementById('overlay');
                 over.style.display = 'none';
+
+                // send message to server to push updates to other clients
+                if (EM.conn) {
+                    EM.conn.send('reload_data');
+                }
             }
             if (data === 'bad') {
                 console.log(data);

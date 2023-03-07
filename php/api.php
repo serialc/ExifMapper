@@ -24,6 +24,18 @@ case 'delete_rsc':
     }
     break;
 
+case 'change_comment':
+    $fn = $_GET['fn'];
+    $com = $_GET['comment'];
+
+    // update data file
+    if (changeResourceComment($fn, $com)) {
+        print(buildResponse(["response" => "good"]));
+    } else {
+        print(buildResponse(["response" => "bad"]));
+    }
+    break;
+
 case 'change_type':
     $fn = $_GET['fn'];
     $rtype = $_GET['rtype'];

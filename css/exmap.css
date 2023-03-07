@@ -32,7 +32,18 @@ html, body {
     max-width: 46vw;
     opacity: 1;
 }
+#overlay_comment, #overlay_comment_input {
+    font-style: italic;
+    margin: 5px 0;
+}
+#overlay_comment_input {
+    margin-bottom: 0px;
+    padding: 0px;
+    border: 0px;
+}
+
 #full_screen_link, #close_overlay_link {
+    cursor: pointer;
     position: absolute;
     top: 20px;
     left: 20px;
@@ -59,9 +70,6 @@ html, body {
 }
 #full_screen_link i, #close_overlay_link i {
     margin: 0 4px;
-}
-#overlay_img, #full_screen_link, #close_overlay_link {
-    cursor: pointer;
 }
 .crosshair {
     cursor: crosshair;

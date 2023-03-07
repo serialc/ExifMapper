@@ -1,5 +1,11 @@
 {
+    "autoload": {
+        "psr-4": {
+            "frakturmedia\\exifmapper\\": "php"
+        }
+    },
     "require": {
-        "filp/whoops": "^2.14"
+        "filp/whoops": "^2.14",
+        "cboden/ratchet": "^0.4"
     }
 }
