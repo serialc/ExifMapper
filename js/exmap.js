@@ -18,7 +18,7 @@ window.onload = (e) => {
     // websockets connection - this could cause an error but there's nothing to catch see:
     // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation
     // This is fine though - everything (except the websocket) still works
-    var conn = new WebSocket('ws://localhost:8080/~cyrille/ExifMapper/activate_synchronisation.php');
+    var conn = new WebSocket('ws://localhost:8080');
     conn.onopen = function(e) {
         console.log("Connection established!");
     };
