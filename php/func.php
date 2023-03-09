@@ -50,7 +50,8 @@ function moveToGarbage($fp, $fn): bool
 
 function getNolocFilesList()
 {
-    return array_diff(scandir(FOLDER_IMG_NOLOC), array('.','..'));
+    // get just the values rather than an associative array
+    return array_values(array_diff(scandir(FOLDER_IMG_NOLOC), array('.','..')));
 }
 
 function georeferencePhoto($fn, $lat, $lng)

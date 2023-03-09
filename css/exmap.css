@@ -7,12 +7,12 @@ html, body {
     height: 100%;
 }
 #overlay, #files_overlay {
-    max-height: 90vh;
+/*    max-height: 90vh; */
+    max-width: 50vw;
     z-index: 1000;
     position: fixed;
     right: 9px;
     top: 10px;
-    overflow-x: hidden;
     background-color: white;
     padding: 1em;
     border-radius: 5px;
@@ -24,7 +24,13 @@ html, body {
     right: unset;
     left: 9px;
     bottom: 10px;
+}
+#fo_files {
     max-height: 40vh;
+    overflow-x: hidden;
+}
+#fo_view_toggle {
+    cursor: pointer;
 }
 #overlay img, #overlay video {
     top: 5vh;
@@ -54,6 +60,7 @@ html, body {
     font-weight: bold;
     opacity: 0.7;
     font-size: 1.3rem;
+    line-height: 1.5rem;
     transition: font-size 0.5s, opacity 0.5s;
 }
 #close_overlay_link {
@@ -76,4 +83,7 @@ html, body {
 }
 video {
     width: 100%;
+}
+.btn {
+    margin-top: 0.3rem;
 }

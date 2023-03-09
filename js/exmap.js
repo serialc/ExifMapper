@@ -18,7 +18,7 @@ window.onload = (e) => {
     // websockets connection - this could cause an error but there's nothing to catch see:
     // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation
     // This is fine though - everything (except the websocket) still works
-    var conn = new WebSocket('ws://localhost:8080');
+    var conn = new WebSocket('ws://localhost:8080/~cyrille/ExifMapper/activate_synchronisation.php');
     conn.onopen = function(e) {
         console.log("Connection established!");
     };
@@ -215,6 +215,11 @@ EM.parseNolocData = function(data)
     // fill in the container of noloc files
     let fof = document.getElementById('fo_files');
     fof.innerHTML = html_list;
+
+    // hide the noloc files as there are none
+    if (data.length === 0) {
+        document.getElementById('files_overlay').style.display = 'none';
+    }
 };
 
 EM.parsePhotosData = function(data)
@@ -390,7 +395,7 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
         fsimg.style.display = 'none';
     } else {
         fsimg.style.display = '';
-        fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See full screen"><i class="fa fa-expand"></i></a>';
+        fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See in new tab"><i class="fa fa-expand"></i></a>';
     }
 
     let clsimg = document.getElementById('close_overlay_link');
@@ -426,4 +431,22 @@ EM.deletePrompt = function(fp, fn)
             }
         });
     }
+};
+
+EM.toggleGeoList = function(hide)
+{
+    let foda = document.getElementById('fo_down_arrow');
+    let foua = document.getElementById('fo_up_arrow');
+    let fof = document.getElementById('fo_files');
+
+    if (hide) {
+        foda.style.display = 'none';
+        foua.style.display = '';
+        fof.style.display = 'none';
+    } else {
+        foda.style.display = '';
+        foua.style.display = 'none';
+        fof.style.display = '';
+    }
+
 };
