@@ -52,7 +52,8 @@ EM.displayEditableComment = function(fn)
     let oc = document.getElementById('overlay_comment');
     let oci = document.getElementById('overlay_comment_input');
 
-    if (oc.style.display === 'none') {
+    // if the input form is visible and button clicked then save the comment
+    if (oci.style.display === '') {
         // show the comment
         oc.style.display = '';
         oc.innerHTML = oci.value;
@@ -71,6 +72,7 @@ EM.displayEditableComment = function(fn)
                     // send message to server to push updates to other clients
                     if (EM.conn) {
                         EM.conn.send('reload_data');
+                        EM.loadData();
                     }
                 }
                 if (data.response === 'bad') {
@@ -78,7 +80,7 @@ EM.displayEditableComment = function(fn)
                 }
             });
     } else {
-        // show the input field
+        // show the comment input field and hide the comment text
         oc.style.display = 'none';
         oci.style.display = '';
         oci.value = oc.innerHTML;
@@ -87,22 +89,45 @@ EM.displayEditableComment = function(fn)
         oci.selectionStart = oci.value.length;
         btn.innerHTML = "Save";
     }
-
 };
 
 EM.changeResourceType = function(fn)
 {
     let mb = document.getElementById('more_buttons');
+    let og = document.getElementById('overlay_geo');
+
     // toggle - hide buttons
-    if (mb.children.length === 3) {
+    if (mb.children.length > 0) {
         mb.innerHTML = '';
+        og.innerHTML = '';
         return;
     }
     // show buttons
     mb.innerHTML =
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')">Img</button> ' +
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'360\')">360</button> ' +
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')">Vid</button> ';
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')" title="Picture/Image">Img</button> ' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'360\')" title="360 degree photosphere">360</button> ' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')" title="Video">Vid</button>';
+};
+
+EM.loadGeoResources = function(fp, fn)
+{
+    fetch('php/api.php?req=load_geo', {cache: "reload"})
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.response === 'good') {
+            let og = document.getElementById('overlay_geo');
+            let mb = document.getElementById('more_buttons');
+            //mb.style.display = 'none';
+
+            og.innerHTML = '<div class="mt-2"><strong>Or select a feature from below to associate resource with:</strong></div>';
+            for (let i in data.geo) {
+                og.innerHTML += data.geo[i] + '<br>';
+            }
+        }
+        if (data.response === 'bad') {
+            console.log(data);
+        }
+    })
 };
 
 EM.submitResourceType = function(fn, rtype)
@@ -138,15 +163,23 @@ EM.relocatePhoto = function(fp, fn)
 
     // provide feedback and allow toggle
     if (reloc_btn.innerHTML === btn_alt_text) {
+        // reset text of button
         reloc_btn.innerHTML = '(re)Locate';
         // deactivate next map click
         EM.onMapClick = undefined;
         // remove crosshair cursor styling
         mapcont.classList.remove('crosshair');
+
+        // remove the features selection
+        let og = document.getElementById('overlay_geo');
+        og.innerHTML = '';
         return;
     } else {
         reloc_btn.innerHTML = btn_alt_text;
     }
+
+    // load and show the features that can be associated with a resource
+    EM.loadGeoResources(fp, fn);
 
     // set cursor on map as crosshair
     mapcont.classList.add('crosshair');
@@ -209,7 +242,7 @@ EM.parseNolocData = function(data)
 
     let html_list = "";
     for (let i in data) {
-        html_list += '<a href="#" onclick="EM.showPic(\'photos/noloc/\', \'' + data[i] + '\',\'\',\'\',\'deloc\')">' + data[i] + "</a><br>";
+        html_list += '<a href="#" onclick="EM.showPic(\'data/noloc/\', \'' + data[i] + '\',\'\',\'\',\'deloc\')">' + data[i] + "</a><br>";
     }
 
     // fill in the container of noloc files
@@ -258,7 +291,7 @@ EM.parsePhotosData = function(data)
 
 EM.loadData = function()
 {
-    fetch('photos/data.csv', {cache: "reload"})
+    fetch('data/data.csv', {cache: "reload"})
     .then(function(response) { return response.text(); })
     .then(function(data) {
         // parse data and save to EM
@@ -287,6 +320,15 @@ EM.displayMap = function()
             }
         ).addTo(EM.map);
 
+        // add controls
+        let expbtn = L.control({position: 'bottomright'});
+        expbtn.onAdd = function() {
+            let div = L.DomUtil.create('div', 'leafcon');
+            div.innerHTML = '<a href="#">Export</a>';
+            return div;
+        };
+        expbtn.addTo(EM.map);
+
         // add makers and refocus
         EM.updateMarkers(true);
     } else {
@@ -309,7 +351,7 @@ EM.updateMarkers = function(reframe=false)
 
         let marker = new L.marker([p[1], p[2]], {
             // options
-        }).on('click', function() { EM.showPic("photos/georef/", p[0], p[3], p[4]) });
+        }).on('click', function() { EM.showPic("data/georef/", p[0], p[3], p[4]) });
 
         markers.push(marker);
     }
@@ -353,7 +395,7 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
         oihtml += '<img src="' + fp + fn + '">';
     }
     if (rtype === '360') {
-        oihtml += '<div id="viewer360" style="width: 60vw; height: 60vh;"></div>';
+        oihtml += '<div id="viewer360" style="width: 45vw; height: 60vh;"></div>';
     }
 
     // add the overlay content

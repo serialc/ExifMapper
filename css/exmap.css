@@ -87,3 +87,11 @@ video {
 .btn {
     margin-top: 0.3rem;
 }
+.leafcon {
+    background: #f4f4f4;
+    padding: 4px;
+    border-radius: 2px;
+}
+.leafcon a {
+    text-decoration: none;
+}

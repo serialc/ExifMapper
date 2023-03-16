@@ -5,11 +5,13 @@
 namespace frakturmedia\exifmapper;
 
 // path is relative to api folder
-define("FOLDER_DATA", "../photos/");
+define("FOLDER_DATA", "../data/");
 define("DATA_FILE", FOLDER_DATA . "data.csv");
 define("FOLDER_IMG_GEOREF", FOLDER_DATA . "georef/");
 define("FOLDER_IMG_NOLOC", FOLDER_DATA . "noloc/");
 define("FOLDER_IMG_GARBAGE", FOLDER_DATA . "garbage/");
+define("FOLDER_GEO", FOLDER_DATA . "geo_data/");
+define("FOLDER_GEO_ALLOCATED", FOLDER_GEO. "allocated/");
 
 function buildResponse($data, $status = 200): string
 {
@@ -43,10 +45,45 @@ function moveToGarbage($fp, $fn): bool
     }
     if (is_writable(FOLDER_IMG_GARBAGE)) {
         rename('../' . $fp . $fn, FOLDER_IMG_GARBAGE . $fn);
+
+        // now remove from data if georeferenced
+        if (strcmp($fp, 'data/georef/') === 0) {
+            removeResourceFromDataFile($fn);
+        }
+
         return true;
     }
     return false;
 }
+
+function removeResourceFromDataFile ($fn)
+{
+    $data = explode("\n", file_get_contents(DATA_FILE));
+    $out = '';
+
+    foreach ($data as $line) {
+        // skip empty lines
+        if ($line === '') { continue; }
+
+        $p = explode(',', $line);
+
+        // update target line
+        if (strcmp($p[0], $fn) === 0) {
+            // do nothing as we're deleting it
+        } else {
+            // add other lines
+            $out .= $line . "\n";
+        }
+    }
+    file_put_contents(DATA_FILE, $out, LOCK_EX);
+    return true;
+}
+
+function getGeoFilesList()
+{
+    // get just the values rather than an associative array
+    return array_values(array_diff(scandir(FOLDER_GEO), array('.','..')));
+};
 
 function getNolocFilesList()
 {

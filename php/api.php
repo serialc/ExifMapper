@@ -57,7 +57,7 @@ case 'relocate':
     $lng = $_GET['lng'];
 
     // if this file hasn't been georeference
-    if (strcmp($_GET['fp'], 'photos/noloc/') === 0) {
+    if (strcmp($_GET['fp'], 'data/noloc/') === 0) {
         if (georeferencePhoto($fn, $lat, $lng)) {
             print(buildResponse([
                 "response" => "good",
@@ -69,7 +69,7 @@ case 'relocate':
         }
     }
     // file needs change its location - edit data file
-    if (strcmp($_GET['fp'], 'photos/georef/') === 0) {
+    if (strcmp($_GET['fp'], 'data/georef/') === 0) {
         if (reGeoreferencePhoto($fn, $lat, $lng)) {
             print(buildResponse([
                 "response" => "good",
@@ -83,8 +83,21 @@ case 'relocate':
 
     break;
 
+case 'load_geo':
+    // get list of geo files
+    $geo = getGeoFilesList();
+    if ($geo) {
+        print(buildResponse([
+            "response" => "good",
+            "geo" => $geo
+        ]));
+    } else {
+        print(buildResponse(["response" => "bad"]));
+    }
+    break;
+
 case 'noloclist':
-    // list the files in ../photos/noloc
+    // list the files in ../data/noloc
     print(buildResponse(getNolocFilesList()));
     break;
 

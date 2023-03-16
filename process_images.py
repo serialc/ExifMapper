@@ -8,7 +8,7 @@ def dms2dd(dms):
 
     return round(d + m/60 + s/(60 * 60), 6)
 
-base_dir = "photos/"
+base_dir = "data/"
 photo_path = base_dir + "unsorted/"
 geoloc = base_dir + "georef/"
 noloc = base_dir + "noloc/"
