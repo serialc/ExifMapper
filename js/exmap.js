@@ -1,15 +1,10 @@
 EM = {};
 
-window.onload = (e) => {
+window.onload = function(e)
+{
     EM.loadData();
     let ovrly = document.getElementById('overlay');
     ovrly.style.display = 'none';
-
-    /*let ovrly_img = document.getElementById('overlay_img')
-    ovrly_img.addEventListener("click", (e) => {
-        ovrly.style.display = "none";
-        e.stopPropagation();
-    });*/
 
     let fo = document.getElementById('files_overlay');
     fo.style.display = 'none';
@@ -121,13 +116,42 @@ EM.loadGeoResources = function(fp, fn)
 
             og.innerHTML = '<div class="mt-2"><strong>Or select a feature from below to associate resource with:</strong></div>';
             for (let i in data.geo) {
-                og.innerHTML += data.geo[i] + '<br>';
+                og.innerHTML += '<a href="javascript:EM.associateResourceToGeoJson(\'' + fp + '\',\'' + fn + '\',\'' + data.geo[i] + '\')">' + data.geo[i] + '</a><br>';
             }
         }
         if (data.response === 'bad') {
             console.log(data);
         }
     })
+};
+
+EM.associateResourceToGeoJson = function(fp, fn, geofn)
+{
+    fetch('php/api.php?req=geojson_assoc&fp=' + fp + '&fn=' + fn + '&geofn=' + geofn, {cache: "reload"})
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        // refresh markers
+        if (data.response === 'good') {
+            // the data should be returned
+            EM.parsePhotosData(data.photos);
+            EM.parseNolocData(data.noloc);
+
+            // update the marker
+            EM.updateMarkers();
+
+            // hide the overlay
+            let over = document.getElementById('overlay');
+            over.style.display = 'none';
+
+            // send message to server to push updates to other clients
+            if (EM.conn) {
+                EM.conn.send('reload_data');
+            }
+        }
+        if (data.response === 'bad') {
+            console.log(data);
+        }
+    });
 };
 
 EM.submitResourceType = function(fn, rtype)
@@ -159,7 +183,7 @@ EM.relocatePhoto = function(fp, fn)
 {
     let reloc_btn = document.getElementById('btn_change_location');
     let mapcont = document.getElementById('map');
-    let btn_alt_text = 'Click map or here to cancel';
+    let btn_alt_text = 'Click map or cancel';
 
     // provide feedback and allow toggle
     if (reloc_btn.innerHTML === btn_alt_text) {

@@ -82,13 +82,58 @@ function removeResourceFromDataFile ($fn)
 function getGeoFilesList()
 {
     // get just the values rather than an associative array
-    return array_values(array_diff(scandir(FOLDER_GEO), array('.','..')));
+    // exclude '.', '..', and 'allocated'
+    return array_values(array_diff(scandir(FOLDER_GEO), array('.','..','allocated')));
 };
 
 function getNolocFilesList()
 {
     // get just the values rather than an associative array
     return array_values(array_diff(scandir(FOLDER_IMG_NOLOC), array('.','..')));
+}
+
+function assocResourceToGeoJson($fp, $fn, $geofn)
+{
+    if (strcmp($_GET['fp'], FOLDER_IMG_NOLOC) === 0) {
+        // we want to append a line to data file
+        file_put_contents(
+            DATA_FILE,
+            "\n" . $fn . ',' . $lat . ',' . $lng . ',,,' . $geofn,
+            // append and lock file
+            FILE_APPEND | LOCK_EX
+        );
+
+        // move the file
+        rename(FOLDER_IMG_NOLOC . $fn, FOLDER_IMG_GEOREF . $fn);
+    }
+
+    if (strcmp($_GET['fp'], FOLDER_IMG_GEOREF) === 0) {
+        // update data file
+        $data = explode("\n", file_get_contents(DATA_FILE));
+        $out = '';
+        
+        foreach ($data as $line) {
+            // skip empty lines
+            if ($line === '') { continue; }
+
+            $p = explode(',', $line);
+
+            // update target line
+            if (strcmp($p[0], $fn) === 0) {
+                // write new data - copy over the file type
+                $out .= $fn . ',,,geojson,' . $p[4] . ',' . $geofn . "\n";
+            } else {
+                // add other lines
+                $out .= $line . "\n";
+            }
+        }
+        file_put_contents(DATA_FILE, $out, LOCK_EX);
+    }
+
+    // move the geojson file to the allocated folder
+    rename(FOLDER_GEO . $geofn, FOLDER_GEO_ALLOCATED . $geofn);
+
+    return true;
 }
 
 function georeferencePhoto($fn, $lat, $lng)
