@@ -5,12 +5,12 @@ require_once 'vendor/autoload.php';
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-use frakturmedia\exifmapper\Chat;
+use frakturmedia\exifmapper\Sync;
 
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(
-            new Chat()
+            new Sync()
         )
     ),
     8080

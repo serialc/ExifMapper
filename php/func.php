@@ -9,9 +9,9 @@ define("FOLDER_DATA", "../data/");
 define("DATA_FILE", FOLDER_DATA . "data.csv");
 define("FOLDER_IMG_GEOREF", FOLDER_DATA . "georef/");
 define("FOLDER_IMG_NOLOC", FOLDER_DATA . "noloc/");
-define("FOLDER_IMG_GARBAGE", FOLDER_DATA . "garbage/");
-define("FOLDER_GEO", FOLDER_DATA . "geo_data/");
-define("FOLDER_GEO_ALLOCATED", FOLDER_GEO. "allocated/");
+define("FOLDER_GARBAGE", FOLDER_DATA . "garbage/");
+define("FOLDER_GEOJSON", FOLDER_DATA . "geo_data/");
+define("FOLDER_GEOJSON_ALLOCATED", FOLDER_GEOJSON. "allocated/");
 
 function buildResponse($data, $status = 200): string
 {
@@ -40,11 +40,11 @@ function requestStatus($code): string
 function moveToGarbage($fp, $fn): bool
 {
     // check destination exists and is writable
-    if (!file_exists(FOLDER_IMG_GARBAGE)) {
-        mkdir(FOLDER_IMG_GARBAGE, 0755, recursive: true);
+    if (!file_exists(FOLDER_GARBAGE)) {
+        mkdir(FOLDER_GARBAGE, 0755, recursive: true);
     }
-    if (is_writable(FOLDER_IMG_GARBAGE)) {
-        rename('../' . $fp . $fn, FOLDER_IMG_GARBAGE . $fn);
+    if (is_writable(FOLDER_GARBAGE)) {
+        rename('../' . $fp . $fn, FOLDER_GARBAGE . $fn);
 
         // now remove from data if georeferenced
         if (strcmp($fp, 'data/georef/') === 0) {
@@ -83,7 +83,7 @@ function getGeoFilesList()
 {
     // get just the values rather than an associative array
     // exclude '.', '..', and 'allocated'
-    return array_values(array_diff(scandir(FOLDER_GEO), array('.','..','allocated')));
+    return array_values(array_diff(scandir(FOLDER_GEOJSON), array('.','..','allocated')));
 };
 
 function getNolocFilesList()
@@ -94,20 +94,20 @@ function getNolocFilesList()
 
 function assocResourceToGeoJson($fp, $fn, $geofn)
 {
-    if (strcmp($_GET['fp'], FOLDER_IMG_NOLOC) === 0) {
+    if (strcmp($fp, FOLDER_IMG_NOLOC) === 0) {
         // we want to append a line to data file
         file_put_contents(
             DATA_FILE,
-            "\n" . $fn . ',' . $lat . ',' . $lng . ',,,' . $geofn,
+            "\n" . $fn . ',,,geojson,' . $geofn,
             // append and lock file
             FILE_APPEND | LOCK_EX
         );
 
-        // move the file
+        // move the img/media resource
         rename(FOLDER_IMG_NOLOC . $fn, FOLDER_IMG_GEOREF . $fn);
     }
 
-    if (strcmp($_GET['fp'], FOLDER_IMG_GEOREF) === 0) {
+    if (strcmp($fp, FOLDER_IMG_GEOREF) === 0) {
         // update data file
         $data = explode("\n", file_get_contents(DATA_FILE));
         $out = '';
@@ -131,7 +131,7 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
     }
 
     // move the geojson file to the allocated folder
-    rename(FOLDER_GEO . $geofn, FOLDER_GEO_ALLOCATED . $geofn);
+    rename(FOLDER_GEOJSON . $geofn, FOLDER_GEOJSON_ALLOCATED . $geofn);
 
     return true;
 }
@@ -141,7 +141,7 @@ function georeferencePhoto($fn, $lat, $lng)
     // we want to append a line to data file
     file_put_contents(
         DATA_FILE,
-        "\n" . $fn . ',' . $lat . ',' . $lng . ',,',
+        "\n" . $fn . ',' . $lat . ',' . $lng . ',,,',
         // append and lock file
         FILE_APPEND | LOCK_EX
     );

@@ -52,7 +52,8 @@ case 'change_type':
     break;
 
 case 'geojson_assoc':
-    $fp = $_GET['fp'];
+    // need to fix path
+    $fp = '../' . $_GET['fp'];
     $fn = $_GET['fn'];
     $geofn = $_GET['geofn'];
 
@@ -68,13 +69,16 @@ case 'geojson_assoc':
     break;
 
 case 'relocate':
+    // need to fix path
+    $fp = '../' . $_GET['fp'];
     $fn = $_GET['fn'];
     $lat = $_GET['lat'];
     $lng = $_GET['lng'];
 
     // if this file hasn't been georeference
-    if (strcmp($_GET['fp'], FOLDER_IMG_NOLOC) === 0) {
+    if (strcmp($fp, FOLDER_IMG_NOLOC) === 0) {
         if (georeferencePhoto($fn, $lat, $lng)) {
+
             print(buildResponse([
                 "response" => "good",
                 "photos" => file_get_contents(DATA_FILE),
@@ -84,8 +88,9 @@ case 'relocate':
             print(buildResponse(["response" => "bad"]));
         }
     }
+
     // file needs change its location - edit data file
-    if (strcmp($_GET['fp'], FOLDER_IMG_GEOREF) === 0) {
+    if (strcmp($fp, FOLDER_IMG_GEOREF) === 0) {
         if (reGeoreferencePhoto($fn, $lat, $lng)) {
             print(buildResponse([
                 "response" => "good",

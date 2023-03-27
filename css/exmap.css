@@ -32,10 +32,10 @@ html, body {
 #fo_view_toggle {
     cursor: pointer;
 }
-#overlay img, #overlay video {
+#overlay_img img, #overlay video {
     top: 5vh;
     max-height: 85vh;
-    max-width: 46vw;
+    max-width: 100%;
     opacity: 1;
 }
 #overlay_comment, #overlay_comment_input {
@@ -46,6 +46,10 @@ html, body {
     margin-bottom: 0px;
     padding: 0px;
     border: 0px;
+}
+#overlay_buttons button {
+    margin-top: 0.2rem;
+    margin-right: 0.2em;
 }
 
 #full_screen_link, #close_overlay_link {
@@ -83,9 +87,6 @@ html, body {
 }
 video {
     width: 100%;
-}
-.btn {
-    margin-top: 0.3rem;
 }
 .leafcon {
     background: #f4f4f4;

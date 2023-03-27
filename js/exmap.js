@@ -185,6 +185,10 @@ EM.relocatePhoto = function(fp, fn)
     let mapcont = document.getElementById('map');
     let btn_alt_text = 'Click map or cancel';
 
+    // shrink the image size
+    let ovrly = document.getElementById('overlay');
+    ovrly.style = 'max-width: 25vw';
+
     // provide feedback and allow toggle
     if (reloc_btn.innerHTML === btn_alt_text) {
         // reset text of button
@@ -193,6 +197,8 @@ EM.relocatePhoto = function(fp, fn)
         EM.onMapClick = undefined;
         // remove crosshair cursor styling
         mapcont.classList.remove('crosshair');
+        // resize overlay img back to full
+        ovrly.style = '';
 
         // remove the features selection
         let og = document.getElementById('overlay_geo');
@@ -220,6 +226,9 @@ EM.relocatePhoto = function(fp, fn)
         // remove crosshair cursor styling
         mapcont.classList.remove('crosshair');
 
+        // resize overlay img back to full
+        ovrly.style = '';
+
         fetch('php/api.php?req=relocate&fp=' + fp + '&fn=' + fn + '&lat=' + e.latlng.lat + '&lng=' + e.latlng.lng, {cache: "reload"})
         .then(function(response) { return response.json(); })
         .then(function(data) {
@@ -245,6 +254,7 @@ EM.relocatePhoto = function(fp, fn)
             }
         });
     }
+
 };
 
 EM.loadNoLoc = function()
@@ -300,11 +310,17 @@ EM.parsePhotosData = function(data)
         }
 
         let p = row.split(',');
+
+
+        // add image to list
         plist.push(p);
 
-        median[0] += parseFloat(p[1], 10);
-        median[1] += parseFloat(p[2], 10);
-        count += 1;
+        // for geojson there is no lat/lng so don't do the following
+        if (p[3] !== 'geojson') {
+            median[0] += parseFloat(p[1], 10);
+            median[1] += parseFloat(p[2], 10);
+            count += 1;
+        }
     }
 
     EM.photos = plist;
@@ -335,7 +351,8 @@ EM.displayMap = function()
     if (!EM.map) {
         EM.map = L.map('map').setView(EM.mean_ll, 10);
 
-        let tiles = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+        let tiles = L.tileLayer(
+            "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
             {
                 id: 'mapbox/satellite-v9',
                 accessToken: "pk.eyJ1IjoiY3lyaWxsZW1kYyIsImEiOiJjazIwamZ4cXIwMzN3M2hscmMxYjgxY2F5In0.0BmIVj6tTvXVd2BmmFo6Nw",
@@ -348,10 +365,18 @@ EM.displayMap = function()
         let expbtn = L.control({position: 'bottomright'});
         expbtn.onAdd = function() {
             let div = L.DomUtil.create('div', 'leafcon');
-            div.innerHTML = '<a href="#">Export</a>';
+            div.innerHTML = '<a href="javascript:EM.export()">Export</a>';
             return div;
         };
         expbtn.addTo(EM.map);
+
+        let newmark = L.control({position: 'topleft'});
+        newmark.onAdd = function() {
+            let div = L.DomUtil.create('div', 'leafcon');
+            div.innerHTML = '<a href="javascript:EM.newHrefMarker()">HREF</a>';
+            return div;
+        };
+        newmark.addTo(EM.map);
 
         // add makers and refocus
         EM.updateMarkers(true);
@@ -359,6 +384,12 @@ EM.displayMap = function()
         // update markers - no refocus
         EM.updateMarkers(false);
     }
+};
+
+EM.export = function()
+{
+    // copy as needed to the export folder
+    console.log("Finish EM.export()");
 };
 
 EM.updateMarkers = function(reframe=false)
@@ -373,11 +404,32 @@ EM.updateMarkers = function(reframe=false)
     for (let i = 0; i < EM.photos.length; i+=1) {
         let p = EM.photos[i];
 
-        let marker = new L.marker([p[1], p[2]], {
-            // options
-        }).on('click', function() { EM.showPic("data/georef/", p[0], p[3], p[4]) });
+        if (p[3] === 'geojson') {
+            // add feature to map
+            geoj_path = 'data/geo_data/allocated/' + p[5];
 
-        markers.push(marker);
+            fetch(geoj_path)
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        return {color: 'orange'};
+                    },
+                    onEachFeature: function(feature, layer) {
+                        layer.on({
+                            click: function() { EM.showPic("data/georef/", p[0], p[3], p[4], 'geojson'); }
+                        });
+                    }
+                }).addTo(EM.map);
+            });
+
+        } else {
+            let marker = new L.marker([p[1], p[2]], {
+                // options
+            }).on('click', function() { EM.showPic("data/georef/", p[0], p[3], p[4]); });
+
+            markers.push(marker);
+        }
     }
     // save markers to main object
     EM.markers = markers;
@@ -393,6 +445,11 @@ EM.updateMarkers = function(reframe=false)
 
 EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
 {
+    // so a bit hacky... but try and figure out type for geojson
+    if (rtype === 'geojson') {
+        rtype = '';
+    }
+
     // override rtype when empty, ''
     if (rtype === '') {
         // get extension - the last .*
@@ -439,18 +496,27 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
     }
 
     let btns_html = '';
-    if (['all', 'deloc'].includes(actions)) {
-        btns_html =
-            '<div><button id="btn_delete_resource" class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button> ' +
-            '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
-    }
-    if (actions === 'all') {
-        btns_html += ' <button id="btn_change_comment" class="btn btn-success" onclick="EM.displayEditableComment(\'' + fn + '\')">Comment</button>';
-        btns_html += ' <button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Type</button> <span id="more_buttons"></span>';
-    }
-    btns_html += '</div>';
-    document.getElementById('overlay_buttons').innerHTML = btns_html;
+    let btn_html_del = '<button id="btn_delete_resource" class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button>';
+    let btn_html_reloc = '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
+    let btn_html_comment = '<button id="btn_change_comment" class="btn btn-success" onclick="EM.displayEditableComment(\'' + fn + '\')">Comment</button>';
+    let btn_html_type = '<button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Type</button> <span id="more_buttons"></span>';
 
+    // show button set based on allowed action name
+    switch (actions) {
+        case 'all':
+            btns_html = '<div>' + btn_html_del + btn_html_reloc + btn_html_comment + btn_html_type + '</div>';
+            break;
+        case 'deloc':
+            btns_html = '<div>' + btn_html_del + btn_html_reloc + '</div>';
+            break;
+        case 'geojson':
+            btns_html = '<div>' + btn_html_del + btn_html_comment + '</div>';
+            break;
+        default:
+            console.log('Show media action type unknown');
+    }
+
+    document.getElementById('overlay_buttons').innerHTML = btns_html;
 
     let over = document.getElementById('overlay');
     over.style.display = '';
