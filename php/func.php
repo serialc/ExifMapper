@@ -136,13 +136,27 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
     return true;
 }
 
+function newBlankMarker($lat, $lng)
+{
+    // we want to append a line to data file
+    // it has no file name!
+    file_put_contents(
+        DATA_FILE,
+        "\n," . $lat . ',' . $lng . ',,,',
+        // lock file and append data
+        FILE_APPEND | LOCK_EX
+    );
+
+    return true;
+}
+
 function georeferencePhoto($fn, $lat, $lng)
 {
     // we want to append a line to data file
     file_put_contents(
         DATA_FILE,
         "\n" . $fn . ',' . $lat . ',' . $lng . ',,,',
-        // append and lock file
+        // lock file and append data
         FILE_APPEND | LOCK_EX
     );
 

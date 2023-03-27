@@ -68,6 +68,20 @@ case 'geojson_assoc':
     }
     break;
 
+case 'new_marker':
+    $lat = $_GET['lat'];
+    $lng = $_GET['lng'];
+
+    if (newBlankMarker($lat, $lng)) {
+        print(buildResponse([
+            "response" => "good",
+            "photos" => file_get_contents(DATA_FILE)
+        ]));
+    } else {
+        print(buildResponse(["response" => "bad"]));
+    }
+    break;
+
 case 'relocate':
     // need to fix path
     $fp = '../' . $_GET['fp'];

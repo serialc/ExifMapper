@@ -218,7 +218,6 @@ EM.relocatePhoto = function(fp, fn)
     //let ovrly = document.getElementById('overlay');
     //ovrly.style.display = 'none';
 
-
     // on the map click do the following
     EM.onMapClick = function(e) {
         // deactivate next map click
@@ -253,7 +252,7 @@ EM.relocatePhoto = function(fp, fn)
                 console.log(data);
             }
         });
-    }
+    };
 
 };
 
@@ -373,7 +372,12 @@ EM.displayMap = function()
         let newmark = L.control({position: 'topleft'});
         newmark.onAdd = function() {
             let div = L.DomUtil.create('div', 'leafcon');
-            div.innerHTML = '<a href="javascript:EM.newHrefMarker()">HREF</a>';
+            let link = document.createElement('a');
+            link.addEventListener('click', EM.newHrefMarker, event);
+            link.innerHTML = "New Marker";
+            link.href= "\#";
+            link.id = 'new_marker_link';
+            div.append(link);
             return div;
         };
         newmark.addTo(EM.map);
@@ -383,6 +387,59 @@ EM.displayMap = function()
     } else {
         // update markers - no refocus
         EM.updateMarkers(false);
+    }
+};
+
+EM.newHrefMarker = function(e)
+{
+    e.stopPropagation();
+
+    let mapcont = document.getElementById('map');
+    let new_marker_link = document.getElementById('new_marker_link');
+
+    // toggle adding new marker
+    if (mapcont.classList.contains('crosshair')) {
+        // remove crosshair cursor styling
+        mapcont.classList.remove('crosshair');
+        new_marker_link.innerHTML = 'New Marker';
+
+        // deactivate map click 
+        EM.onMapClick = undefined;
+
+    } else {
+        // set cursor on map as crosshair
+        mapcont.classList.add('crosshair');
+        new_marker_link.innerHTML = 'Cancel';
+
+        EM.onMapClick = function(e) {
+
+            // deactivate map click now that this has happened
+            EM.onMapClick = undefined;
+
+            fetch('php/api.php?req=new_marker&lat=' + e.latlng.lat + '&lng=' + e.latlng.lng, {cache: "reload"})
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.response === 'good') {
+                    // remove crosshair cursor styling
+                    mapcont.classList.remove('crosshair');
+                    new_marker_link.innerHTML = 'New Marker';
+
+                    // the data should be returned
+                    EM.parsePhotosData(data.photos);
+
+                    // update the marker
+                    EM.updateMarkers();
+
+                    // send message to server to push updates to other clients
+                    if (EM.conn) {
+                        EM.conn.send('reload_data');
+                    }
+                }
+                if (data.response === 'bad') {
+                    console.log(data);
+                }
+            });
+        };
     }
 };
 
