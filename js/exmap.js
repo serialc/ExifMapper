@@ -376,26 +376,28 @@ EM.displayMap = function()
         ).addTo(EM.map);
 
         // add controls
-        let expbtn = L.control({position: 'bottomright'});
-        expbtn.onAdd = function() {
+        let br_btns = L.control({position: 'bottomright'});
+        br_btns.onAdd = function() {
             let div = L.DomUtil.create('div', 'leafcon');
-            div.innerHTML = '<a href="javascript:EM.export()">Export</a>';
-            return div;
-        };
-        expbtn.addTo(EM.map);
+            let span = document.createElement('span');
+            span.innerHTML = '<a href="javascript:EM.export()"><button class="btn btn-warning btn-sm">Export</button></a>';
+            div.append(span);
 
-        let newmark = L.control({position: 'topleft'});
-        newmark.onAdd = function() {
-            let div = L.DomUtil.create('div', 'leafcon');
             let link = document.createElement('a');
             link.addEventListener('click', EM.newHrefMarker, event);
-            link.innerHTML = "New URL Marker";
             link.href= "\#";
-            link.id = 'new_marker_link';
+            let nubtn = document.createElement('button');
+            nubtn.classList.add('ms-2');
+            nubtn.classList.add('btn');
+            nubtn.classList.add('btn-primary');
+            nubtn.classList.add('btn-sm');
+            nubtn.id = 'new_marker_link';
+            nubtn.innerHTML = 'New URL Marker';
+            link.append(nubtn);
             div.append(link);
             return div;
         };
-        newmark.addTo(EM.map);
+        br_btns.addTo(EM.map);
 
         // add makers and refocus
         EM.updateMarkers(true);
@@ -576,7 +578,7 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
         if (fn.search('youtube.com') !== -1) {
             // embed youtube video
             let code = fn.split('https://www.youtube.com/watch?v=')[1];
-            oihtml += '<div style="position:relative;padding-top:56.25%;"><iframe src="https://www.youtube.com/embed/' + code + '?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe></div>';
+            oihtml += '<div style="position:relative;padding-top:56.25%;width:47vw;"><iframe src="https://www.youtube.com/embed/' + code + '?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe></div>';
         }
     }
 
@@ -597,11 +599,10 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
     }
 
     let btns_html = '';
-    let btn_html_del = '<button id="btn_delete_resource" class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\')">Delete</button>';
+    let btn_html_del = '<button id="btn_delete_resource" class="btn btn-danger" onclick="EM.deletePrompt(\'' + fp + '\', \'' + fn + '\',\'' + rtype + '\')">Delete</button>';
     let btn_html_reloc = '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
     let btn_html_comment = '<button id="btn_change_comment" class="btn btn-success" onclick="EM.displayEditableComment(\'' + fn + '\')">Comment</button>';
     let btn_html_type = '<button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Type</button> <span id="more_buttons"></span>';
-    let btn_html_href = '<button id="btn_change_href" class="btn btn-secondary" onclick="EM.toggleUrlForm(\'' + fn + '\')">URL</button> <span id="url_input"></span>';
 
     // show button set based on allowed action name
     switch (actions) {
@@ -615,7 +616,7 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
             btns_html = '<div>' + btn_html_del + btn_html_comment + '</div>';
             break;
         case 'href':
-            btns_html = '<div>' + btn_html_del + btn_html_comment + btn_html_href + '</div>';
+            btns_html = '<div>' + btn_html_del + btn_html_reloc + btn_html_comment + '</div>';
             break;
         default:
             console.log('Show media action type unknown');
@@ -642,11 +643,11 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
     });
 };
 
-EM.deletePrompt = function(fp, fn)
+EM.deletePrompt = function(fp, fn, rtype)
 {
     if (confirm("Are you sure you want to delete this image or resource?")) {
         // delete (but actually just move) the image (to the garbage)
-        fetch('php/api.php?req=delete_rsc&fp=' + fp + '&fn=' + fn, {cache: "reload"})
+        fetch('php/api.php?req=delete_rsc&fp=' + fp + '&fn=' + fn + '&rtype=' + rtype, {cache: "reload"})
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data === 'good') {

@@ -16,8 +16,13 @@ require_once('func.php');
 $req = $_GET['req'];
 
 switch($req) {
+
 case 'delete_rsc':
-    if (moveToGarbage($_GET['fp'], $_GET['fn'])) {
+    $fp = $_GET['fp'];
+    $fn = $_GET['fn'];
+    $rtype = $_GET['rtype'];
+
+    if (moveToGarbage($fp, $fn, $rtype)) {
         print(buildResponse('good'));
     } else {
         print(buildResponse('bad'));

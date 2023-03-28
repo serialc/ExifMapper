@@ -37,8 +37,14 @@ function requestStatus($code): string
     return ($status[$code]) ?: $status[500];
 }
 
-function moveToGarbage($fp, $fn): bool
+function moveToGarbage($fp, $fn, $rtype): bool
 {
+    if (strcmp($rtype, 'href') === 0) {
+        // if it's an href resource there's no file to delete
+        // but we still need to remove from the list
+        removeResourceFromDataFile($fn);
+        return true;
+    }
     // check destination exists and is writable
     if (!file_exists(FOLDER_GARBAGE)) {
         mkdir(FOLDER_GARBAGE, 0755, recursive: true);
@@ -46,7 +52,7 @@ function moveToGarbage($fp, $fn): bool
     if (is_writable(FOLDER_GARBAGE)) {
         rename('../' . $fp . $fn, FOLDER_GARBAGE . $fn);
 
-        // now remove from data if georeferenced
+        // now remove from data file if georeferenced
         if (strcmp($fp, 'data/georef/') === 0) {
             removeResourceFromDataFile($fn);
         }
