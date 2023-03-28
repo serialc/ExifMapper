@@ -56,6 +56,7 @@ function moveToGarbage($fp, $fn): bool
     return false;
 }
 
+// Delete a line from the data file
 function removeResourceFromDataFile ($fn)
 {
     $data = explode("\n", file_get_contents(DATA_FILE));
@@ -75,10 +76,12 @@ function removeResourceFromDataFile ($fn)
             $out .= $line . "\n";
         }
     }
+
     file_put_contents(DATA_FILE, $out, LOCK_EX);
     return true;
 }
 
+// get the list of files in the folder containing spatial features (e.g. lines)
 function getGeoFilesList()
 {
     // get just the values rather than an associative array
@@ -86,6 +89,7 @@ function getGeoFilesList()
     return array_values(array_diff(scandir(FOLDER_GEOJSON), array('.','..','allocated')));
 };
 
+// get the filenames of all the media that is not georeferenced
 function getNolocFilesList()
 {
     // get just the values rather than an associative array
@@ -136,13 +140,14 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
     return true;
 }
 
-function newBlankMarker($lat, $lng)
+function newUrlMarker($fn, $lat, $lng)
 {
     // we want to append a line to data file
     // it has no file name!
     file_put_contents(
         DATA_FILE,
-        "\n," . $lat . ',' . $lng . ',,,',
+        //fn,lat,lng,rtype,mtype,comment,geojson
+        "\n" . $fn . ',' . $lat . ',' . $lng . ',href,marker,,',
         // lock file and append data
         FILE_APPEND | LOCK_EX
     );
@@ -155,7 +160,8 @@ function georeferencePhoto($fn, $lat, $lng)
     // we want to append a line to data file
     file_put_contents(
         DATA_FILE,
-        "\n" . $fn . ',' . $lat . ',' . $lng . ',,,',
+        //fn,lat,lng,rtype,mtype,comment,geojson
+        "\n" . $fn . ',' . $lat . ',' . $lng . ',,marker,,',
         // lock file and append data
         FILE_APPEND | LOCK_EX
     );
@@ -180,7 +186,8 @@ function reGeoreferencePhoto($fn, $lat, $lng)
         // update target line
         if (strcmp($p[0], $fn) === 0) {
             // write new data - copy over the file type
-            $out .= $fn . ',' . $lat . ',' . $lng . ',' . $p[3] . ',' . $p[4] . "\n";
+            //fn,lat,lng,rtype,mtype,comment,geojson
+            $out .= $fn . ',' . $lat . ',' . $lng . ',' . $p[3] . ',' . $p[4] . ',' . $p[5] . ',' . $p[6] . "\n";
         } else {
             // add other lines
             $out .= $line . "\n";
@@ -207,7 +214,8 @@ function changeResourceComment($fn, $com)
         // update target line
         if (strcmp($p[0], $fn) === 0) {
             // write new data - copy over the file type
-            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $p[3] . ',' . $com . "\n";
+            //fn,lat,lng,rtype,mtype,comment,geojson
+            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $p[3] . ',' . $p[4] . ',' . $com . ',' . $p[6] . "\n";
         } else {
             // add other lines
             $out .= $line . "\n";
@@ -234,7 +242,8 @@ function changeResourceType($fn, $rtype)
         // update target line
         if (strcmp($p[0], $fn) === 0) {
             // write new data - copy over the file type
-            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $rtype . ',' . $p[4] . "\n";
+            //fn,lat,lng,rtype,mtype,comment,geojson
+            $out .= $p[0] . ',' . $p[1] . ',' . $p[2]. ',' . $rtype . ',' . $p[4] . ',' . $p[5] . ',' . $p[6] . "\n";
         } else {
             // add other lines
             $out .= $line . "\n";

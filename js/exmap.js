@@ -275,7 +275,7 @@ EM.parseNolocData = function(data)
 
     let html_list = "";
     for (let i in data) {
-        html_list += '<a href="#" onclick="EM.showPic(\'data/noloc/\', \'' + data[i] + '\',\'\',\'\',\'deloc\')">' + data[i] + "</a><br>";
+        html_list += '<a href="#" onclick="EM.showPic(\'data/noloc/\', \'' + data[i] + '\',\'\',\'\',\'\',\'del_loc\')">' + data[i] + "</a><br>";
     }
 
     // fill in the container of noloc files
@@ -293,8 +293,12 @@ EM.parsePhotosData = function(data)
     let rdata = data.split('\n')
     let head = true;
     let plist = [];
-    let median = [0,0];
+
+    // we want the mean centre of the points
+    // however this gets over-ridden but may be a good
+    let meanloc = [0,0];
     let count = 0;
+
     for (let i = 0; i < rdata.length; i+=1) {
         // skip header
         if (head) {
@@ -310,22 +314,33 @@ EM.parsePhotosData = function(data)
 
         let p = row.split(',');
 
+        let pobj = {
+            "fn": p[0],
+            "lat": p[1],
+            "lng": p[2],
+            "rtype": p[3],
+            "mtype": p[4],
+            "comment": p[5],
+            "geojson": p[6]
+        };
 
         // add image to list
-        plist.push(p);
+        plist.push(pobj);
 
+        // we want to get the mean centre
         // for geojson there is no lat/lng so don't do the following
-        if (p[3] !== 'geojson') {
-            median[0] += parseFloat(p[1], 10);
-            median[1] += parseFloat(p[2], 10);
+        if (pobj[3] !== 'geojson') {
+            meanloc[0] += parseFloat(p[1], 10);
+            meanloc[1] += parseFloat(p[2], 10);
             count += 1;
         }
     }
 
     EM.photos = plist;
 
-    // calculate median location
-    EM.mean_ll = [median[0]/count, median[1]/count];
+    // calculate mean location
+    EM.mean_ll = meanloc;
+    //EM.mean_ll = [meanloc[0]/count, meanloc[1]/count];
 };
 
 EM.loadData = function()
@@ -374,7 +389,7 @@ EM.displayMap = function()
             let div = L.DomUtil.create('div', 'leafcon');
             let link = document.createElement('a');
             link.addEventListener('click', EM.newHrefMarker, event);
-            link.innerHTML = "New Marker";
+            link.innerHTML = "New URL Marker";
             link.href= "\#";
             link.id = 'new_marker_link';
             div.append(link);
@@ -413,10 +428,15 @@ EM.newHrefMarker = function(e)
 
         EM.onMapClick = function(e) {
 
+            let url = prompt("Provide the URL to associate with this marker");
+            if (url === null) {
+                return;
+            }
+
             // deactivate map click now that this has happened
             EM.onMapClick = undefined;
 
-            fetch('php/api.php?req=new_marker&lat=' + e.latlng.lat + '&lng=' + e.latlng.lng, {cache: "reload"})
+            fetch('php/api.php?req=new_marker&fn=' + url + '&lat=' + e.latlng.lat + '&lng=' + e.latlng.lng, {cache: "reload"})
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.response === 'good') {
@@ -461,7 +481,12 @@ EM.updateMarkers = function(reframe=false)
     for (let i = 0; i < EM.photos.length; i+=1) {
         let p = EM.photos[i];
 
-        if (p[3] === 'geojson') {
+        // if no mtype is present, default to marker
+        if (p.mtype === '') {
+            p.mtype = 'marker';
+        }
+
+        if (p.mtype === 'geojson') {
             // add feature to map
             geoj_path = 'data/geo_data/allocated/' + p[5];
 
@@ -474,20 +499,26 @@ EM.updateMarkers = function(reframe=false)
                     },
                     onEachFeature: function(feature, layer) {
                         layer.on({
-                            click: function() { EM.showPic("data/georef/", p[0], p[3], p[4], 'geojson'); }
+                            click: function() {
+                                EM.showPic("data/georef/", p.fn, p.rtype, p.mtype, p.comment, 'geojson');
+                            }
                         });
                     }
                 }).addTo(EM.map);
             });
+        }
 
-        } else {
-            let marker = new L.marker([p[1], p[2]], {
+        if (p.mtype === 'marker') {
+            let marker = new L.marker([p.lat, p.lng], {
                 // options
-            }).on('click', function() { EM.showPic("data/georef/", p[0], p[3], p[4]); });
+            }).on('click', function() {
+                EM.showPic("data/georef/", p.fn, p.rtype, p.mtype, p.comment);
+            });
 
             markers.push(marker);
         }
     }
+
     // save markers to main object
     EM.markers = markers;
 
@@ -500,14 +531,14 @@ EM.updateMarkers = function(reframe=false)
     }
 };
 
-EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
+EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
 {
     // so a bit hacky... but try and figure out type for geojson
     if (rtype === 'geojson') {
         rtype = '';
     }
 
-    // override rtype when empty, ''
+    // try to determine rtype when empty, ''
     if (rtype === '') {
         // get extension - the last .*
         let fext = fn.split('.');
@@ -524,6 +555,7 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
         }
     }
 
+
     let oihtml = '';
 
     if (rtype === 'vid') {
@@ -534,6 +566,18 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
     }
     if (rtype === '360') {
         oihtml += '<div id="viewer360" style="width: 45vw; height: 60vh;"></div>';
+    }
+    if (rtype === 'href') {
+        // over-ride actions for href
+        actions = 'href';
+
+        // determine which type of link - we can load some types
+        // the link is stored in the filename: fn
+        if (fn.search('youtube.com') !== -1) {
+            // embed youtube video
+            let code = fn.split('https://www.youtube.com/watch?v=')[1];
+            oihtml += '<div style="position:relative;padding-top:56.25%;"><iframe src="https://www.youtube.com/embed/' + code + '?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe></div>';
+        }
     }
 
     // add the overlay content
@@ -557,17 +601,21 @@ EM.showPic = function(fp, fn, rtype='img', comment, actions='all')
     let btn_html_reloc = '<button id="btn_change_location" class="btn btn-primary" onclick="EM.relocatePhoto(\'' + fp + '\', \'' + fn + '\')">(re)Locate</button>';
     let btn_html_comment = '<button id="btn_change_comment" class="btn btn-success" onclick="EM.displayEditableComment(\'' + fn + '\')">Comment</button>';
     let btn_html_type = '<button id="btn_change_type" class="btn btn-secondary" onclick="EM.changeResourceType(\'' + fn + '\')">Type</button> <span id="more_buttons"></span>';
+    let btn_html_href = '<button id="btn_change_href" class="btn btn-secondary" onclick="EM.toggleUrlForm(\'' + fn + '\')">URL</button> <span id="url_input"></span>';
 
     // show button set based on allowed action name
     switch (actions) {
         case 'all':
             btns_html = '<div>' + btn_html_del + btn_html_reloc + btn_html_comment + btn_html_type + '</div>';
             break;
-        case 'deloc':
+        case 'del_loc':
             btns_html = '<div>' + btn_html_del + btn_html_reloc + '</div>';
             break;
         case 'geojson':
             btns_html = '<div>' + btn_html_del + btn_html_comment + '</div>';
+            break;
+        case 'href':
+            btns_html = '<div>' + btn_html_del + btn_html_comment + btn_html_href + '</div>';
             break;
         default:
             console.log('Show media action type unknown');

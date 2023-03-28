@@ -69,10 +69,11 @@ case 'geojson_assoc':
     break;
 
 case 'new_marker':
+    $fn = $_GET['fn'];
     $lat = $_GET['lat'];
     $lng = $_GET['lng'];
 
-    if (newBlankMarker($lat, $lng)) {
+    if (newUrlMarker($fn, $lat, $lng)) {
         print(buildResponse([
             "response" => "good",
             "photos" => file_get_contents(DATA_FILE)
