@@ -29,6 +29,14 @@ case 'delete_rsc':
     }
     break;
 
+case 'export':
+    if (exportWebMap()) {
+        print(buildResponse(["response" => "good"]));
+    } else {
+        print(buildResponse(["response" => "bad"]));
+    }
+    break;
+
 case 'change_comment':
     $fn = $_GET['fn'];
     $com = $_GET['comment'];

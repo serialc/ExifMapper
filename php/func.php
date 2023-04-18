@@ -8,6 +8,8 @@ namespace frakturmedia\exifmapper;
 define("FOLDER_DATA", "../data/");
 define("DATA_FILE", FOLDER_DATA . "data.csv");
 define("FOLDER_IMG_GEOREF", FOLDER_DATA . "georef/");
+define("FOLDER_EXPORT", FOLDER_DATA . "export/");
+define("FOLDER_EXPORT_TEMPLATE", FOLDER_DATA . "export_template/");
 define("FOLDER_IMG_NOLOC", FOLDER_DATA . "noloc/");
 define("FOLDER_GARBAGE", FOLDER_DATA . "garbage/");
 define("FOLDER_GEOJSON", FOLDER_DATA . "geo_data/");
@@ -35,6 +37,52 @@ function requestStatus($code): string
         500 => 'Internal Server Error',
     );
     return ($status[$code]) ?: $status[500];
+}
+
+function recurse_copy($src, $dst)
+{
+
+    $dir = opendir($src);
+    // make destination directory
+    if (!file_exists($dst)) {
+        // '@' is to hide any warnings/errors 
+        @mkdir($dst, 0755, recursive: true);
+    }
+
+    while (false !== ( $file = readdir($dir))) {
+        if (( $file != '.' ) && ( $file != '..' )) {
+            if ( is_dir($src . '/' . $file) ) {
+                recurse_copy($src . '/' . $file, $dst . '/' . $file);
+            } else {
+                copy($src . '/' . $file, $dst . '/' . $file);
+            }
+        }
+    }
+    closedir($dir);
+}
+
+function exportWebMap(): bool
+{
+    if (!file_exists(FOLDER_EXPORT)) {
+        mkdir(FOLDER_EXPORT, 0755, recursive: true);
+        mkdir(FOLDER_EXPORT . 'data', 0755, recursive: true);
+    }
+    if (is_writable(FOLDER_EXPORT)) {
+        // copy data file
+        copy(DATA_FILE, FOLDER_EXPORT . 'meta_data.csv');
+
+        // copy images folder
+        recurse_copy(FOLDER_IMG_GEOREF, FOLDER_EXPORT . 'data');
+
+        // copy the html/css/js
+        recurse_copy(FOLDER_EXPORT_TEMPLATE, FOLDER_EXPORT);
+
+        // copy the geojson
+        recurse_copy(FOLDER_GEOJSON_ALLOCATED, FOLDER_EXPORT . 'geojson');
+        
+        return true;
+    }
+    return false;
 }
 
 function moveToGarbage($fp, $fn, $rtype): bool

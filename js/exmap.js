@@ -98,10 +98,11 @@ EM.changeResourceType = function(fn)
         return;
     }
     // show buttons
-    mb.innerHTML =
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')" title="Picture/Image">Img</button> ' +
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'360\')" title="360 degree photosphere">360</button> ' +
-        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')" title="Video">Vid</button>';
+    mb.innerHTML = '<br>Choose type:<br>' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'img\')" title="Picture/Image">Img</button>' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'360\')" title="360 degree photosphere">360</button>' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'audio\')" title="Audio">Audio</button>' +
+        '<button class="btn btn-info btn-sm" onclick="EM.submitResourceType(\'' + fn + '\',\'vid\')" title="Video">Video</button>';
 };
 
 EM.loadGeoResources = function(fp, fn)
@@ -185,7 +186,7 @@ EM.relocatePhoto = function(fp, fn)
     let mapcont = document.getElementById('map');
     let btn_alt_text = 'Click map or cancel';
 
-    // shrink the image size
+    // shrink the image size to provide better view of the map
     let ovrly = document.getElementById('overlay');
     ovrly.style = 'max-width: 25vw';
 
@@ -380,7 +381,8 @@ EM.displayMap = function()
         br_btns.onAdd = function() {
             let div = L.DomUtil.create('div', 'leafcon');
             let span = document.createElement('span');
-            span.innerHTML = '<a href="javascript:EM.export()"><button class="btn btn-warning btn-sm">Export</button></a>';
+            span.innerHTML = '<a href="javascript:EM.export()"><button id="export_button" class="btn btn-warning btn-sm">Export</button></a>' +
+                '<a id="export_link" class="ms-2" href="data/export/" target="_blank" style="display: none"><button class="btn btn-success btn-sm"><i class="fa fa-external-link"></i></button></a>';
             div.append(span);
 
             let link = document.createElement('a');
@@ -467,8 +469,27 @@ EM.newHrefMarker = function(e)
 
 EM.export = function()
 {
+    let ebtn = document.getElementById('export_button');
+    let elnk = document.getElementById('export_link');
+
+    // show processing
+    ebtn.innerHTML = '<i class="fa fa-spin fa-circle-o-notch"></i>';
+    
     // copy as needed to the export folder
-    console.log("Finish EM.export()");
+    fetch('php/api.php?req=export', {cache: "reload"})
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.response === 'good') {
+            // return button to normal text
+            ebtn.innerHTML = 'Export';
+            elnk.style.display = '';
+        }
+        if (data.response === 'bad') {
+            ebtn.innerHTML = 'Error';
+            elnk.style.display = 'none';
+            console.log(data);
+        }
+    });
 };
 
 EM.updateMarkers = function(reframe=false)
@@ -555,6 +576,11 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
         if (vid_ftypes.includes(fext.toLowerCase())) {
             rtype = 'vid';
         }
+
+        let audio_ftype = ['m4a', 'mp3'];
+        if (audio_ftype.includes(fext.toLowerCase())) {
+            rtype = 'audio';
+        }
     }
 
 
@@ -562,6 +588,9 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
 
     if (rtype === 'vid') {
         oihtml += '<video controls><source src="' + fp + fn + '" type="video/mp4"></video>';
+    }
+    if (rtype === 'audio') {
+        oihtml += '<audio controls src="' + fp + fn + '"></audio>';
     }
     if (rtype === 'img') {
         oihtml += '<img src="' + fp + fn + '">';
@@ -629,9 +658,10 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
     let over = document.getElementById('overlay');
     over.style.display = '';
 
-    // only allow fullscreen for non-360 resources
+    // disallow allow fullscreen for some rtypes
     let fsimg = document.getElementById('full_screen_link');
-    if (rtype === '360') {
+    let nofs = ['360', 'vid', 'audio', 'href'];
+    if (nofs.includes(rtype)) {
         fsimg.style.display = 'none';
     } else {
         fsimg.style.display = '';
