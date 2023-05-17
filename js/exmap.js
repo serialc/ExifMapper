@@ -13,7 +13,8 @@ window.onload = function(e)
     // websockets connection - this could cause an error but there's nothing to catch see:
     // https://stackoverflow.com/questions/31002592/javascript-doesnt-catch-error-in-websocket-instantiation
     // This is fine though - everything (except the websocket) still works
-    var conn = new WebSocket('ws://localhost:8080');
+    var loc = window.location;
+    var conn = new WebSocket('wss://' + loc.host + ':8080' + loc.pathname);
     conn.onopen = function(e) {
         console.log("Connection established!");
     };
