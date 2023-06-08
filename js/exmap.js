@@ -199,18 +199,7 @@ EM.relocatePhoto = function(fp, fn)
 
     // provide feedback and allow toggle
     if (reloc_btn.innerHTML === btn_alt_text) {
-        // reset text of button
-        reloc_btn.innerHTML = '(re)Locate';
-        // deactivate next map click
-        EM.onMapClick = undefined;
-        // remove crosshair cursor styling
-        mapcont.classList.remove('crosshair');
-        // resize overlay img back to full
-        ovrly.style = '';
-
-        // remove the features selection
-        let og = document.getElementById('overlay_geo');
-        og.innerHTML = '';
+        EM.endRelocationCleanUp();
         return;
     } else {
         reloc_btn.innerHTML = btn_alt_text;
@@ -229,18 +218,13 @@ EM.relocatePhoto = function(fp, fn)
 
     // on the map click do the following
     EM.onMapClick = function(e) {
-        // deactivate next map click
-        EM.onMapClick = undefined;
-        // remove crosshair cursor styling
-        mapcont.classList.remove('crosshair');
-
-        // resize overlay img back to full
-        ovrly.style = '';
 
         fetch('php/api.php?req=relocate&fp=' + fp + '&fn=' + fn + '&lat=' + e.latlng.lat + '&lng=' + e.latlng.lng, {cache: "reload"})
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.response === 'good') {
+                // change back the buttons, crosshair, geojsons available
+                EM.endRelocationCleanUp();
                 // the data should be returned
                 EM.parsePhotosData(data.photos);
                 EM.parseNolocData(data.noloc);
@@ -263,6 +247,24 @@ EM.relocatePhoto = function(fp, fn)
         });
     };
 
+};
+
+EM.endRelocationCleanUp = function()
+{
+    // reset text of button
+    document.getElementById('btn_change_location').innerHTML = '(re)Locate';
+
+    // deactivate next map click
+    EM.onMapClick = undefined;
+
+    // remove crosshair cursor styling
+    document.getElementById('map').classList.remove('crosshair');
+
+    // resize overlay img back to full
+    document.getElementById('overlay').style = '';
+
+    // remove the features selection
+    document.getElementById('overlay_geo').innerHTML = '';
 };
 
 EM.loadNoLoc = function()
