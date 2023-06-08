@@ -75,6 +75,11 @@ EM.parsePhotosData = function(data)
         // add image to list
         plist.push(pobj);
 
+        // if there's no lat/lng, skip (may be a GeoJSON resource)
+        if (p[1] === '' || p[2] === '') {
+            continue;
+        }
+
         // we want to get the mean centre
         // for geojson there is no lat/lng so don't do the following
         if (pobj[3] !== 'geojson') {
@@ -150,7 +155,7 @@ EM.updateMarkers = function(reframe=false)
 
         if (p.mtype === 'geojson') {
             // add feature to map
-            geoj_path = 'geojson/' + p[5];
+            geoj_path = 'geojson/' + p.geojson;
 
             fetch(geoj_path)
             .then(function(response) { return response.json(); })
