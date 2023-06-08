@@ -179,7 +179,7 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
             // update target line
             if (strcmp($p[0], $fn) === 0) {
                 // write new data - copy over the file type
-                $out .= $fn . ',,' . $p[3] . ',geojson,' . $p[5] . ',' . $geofn . "\n";
+                $out .= $fn . ',,,' . $p[3] . ',geojson,' . $p[5] . ',' . $geofn . "\n";
             } else {
                 // add other lines
                 $out .= $line . "\n";
