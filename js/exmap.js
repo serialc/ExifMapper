@@ -108,6 +108,7 @@ EM.changeResourceType = function(fn)
 
 EM.loadGeoResources = function(fp, fn)
 {
+    // load all the unattributed geojson files
     fetch('php/api.php?req=load_geo', {cache: "reload"})
     .then(function(response) { return response.json(); })
     .then(function(data) {
@@ -127,9 +128,9 @@ EM.loadGeoResources = function(fp, fn)
     })
 };
 
-EM.associateResourceToGeoJson = function(fp, fn, geofn)
+EM.associateResourceToGeoJson = function(fp, fn, geofn, rtype)
 {
-    fetch('php/api.php?req=geojson_assoc&fp=' + fp + '&fn=' + fn + '&geofn=' + geofn, {cache: "reload"})
+    fetch('php/api.php?req=geojson_assoc&fp=' + fp + '&fn=' + fn + '&geofn=' + geofn + '&rtype=' + rtype, {cache: "reload"})
     .then(function(response) { return response.json(); })
     .then(function(data) {
         // refresh markers
@@ -145,6 +146,11 @@ EM.associateResourceToGeoJson = function(fp, fn, geofn)
             let over = document.getElementById('overlay');
             over.style.display = 'none';
 
+            // stop listening to clicks on map
+            // deactivate next map click
+            EM.onMapClick = undefined;
+            // remove crosshair cursor styling
+            mapcont.classList.remove('crosshair');
             // send message to server to push updates to other clients
             if (EM.conn) {
                 EM.conn.send('reload_data');
@@ -211,6 +217,7 @@ EM.relocatePhoto = function(fp, fn)
     }
 
     // load and show the features that can be associated with a resource
+    // pass everything about this resource as well
     EM.loadGeoResources(fp, fn);
 
     // set cursor on map as crosshair
@@ -328,6 +335,11 @@ EM.parsePhotosData = function(data)
 
         // add image to list
         plist.push(pobj);
+
+        // if there's no lat/lng, skip (may be a GeoJSON resource)
+        if (p[1] === '' || p[2] === '') {
+            continue;
+        }
 
         // we want to get the mean centre
         // for geojson there is no lat/lng so don't do the following
@@ -512,7 +524,7 @@ EM.updateMarkers = function(reframe=false)
 
         if (p.mtype === 'geojson') {
             // add feature to map
-            geoj_path = 'data/geo_data/allocated/' + p[5];
+            geoj_path = 'data/geo_data/allocated/' + p.geojson;
 
             fetch(geoj_path)
             .then(function(response) { return response.json(); })
@@ -557,14 +569,9 @@ EM.updateMarkers = function(reframe=false)
 
 EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
 {
-    // so a bit hacky... but try and figure out type for geojson
-    if (rtype === 'geojson') {
-        rtype = '';
-    }
-
     // try to determine rtype when empty, ''
     if (rtype === '') {
-        // get extension - the last .*
+        // get filename extension - the last .*
         let fext = fn.split('.');
         fext = fext[fext.length - 1];
 
@@ -583,7 +590,6 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
             rtype = 'audio';
         }
     }
-
 
     let oihtml = '';
 

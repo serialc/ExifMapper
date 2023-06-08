@@ -156,7 +156,7 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
         // we want to append a line to data file
         file_put_contents(
             DATA_FILE,
-            "\n" . $fn . ',,,geojson,' . $geofn,
+            "\n" . $fn . ',,,' . $rtype . ',geojson,,' . $geofn,
             // append and lock file
             FILE_APPEND | LOCK_EX
         );
@@ -179,7 +179,7 @@ function assocResourceToGeoJson($fp, $fn, $geofn)
             // update target line
             if (strcmp($p[0], $fn) === 0) {
                 // write new data - copy over the file type
-                $out .= $fn . ',,,geojson,' . $p[4] . ',' . $geofn . "\n";
+                $out .= $fn . ',,' . $p[3] . ',geojson,' . $p[5] . ',' . $geofn . "\n";
             } else {
                 // add other lines
                 $out .= $line . "\n";
