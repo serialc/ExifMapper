@@ -1,4 +1,4 @@
-EM = {};
+};
 
 window.onload = function(e)
 {
@@ -547,8 +547,16 @@ EM.updateMarkers = function(reframe=false)
         }
 
         if (p.mtype === 'marker') {
+
+            // determine the icon type
+            let thisIcon = EM.marker_icons.unknown
+            if ( p.rtype !== '' ) {
+                thisIcon = EM.marker_icons[p.rtype];
+            }
+
             let marker = new L.marker([p.lat, p.lng], {
                 // options
+                icon: thisIcon
             }).on('click', function() {
                 EM.showPic("data/georef/", p.fn, p.rtype, p.mtype, p.comment);
             });

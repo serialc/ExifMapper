@@ -1,4 +1,55 @@
-EM = {};
+EM = {
+    "marker_icons": {
+        "img": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-blue.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "360": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-red.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "vid": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-violet.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "audio": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-green.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "href": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-yellow.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "unknown": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-black.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }
+};
 
 window.onload = function(e)
 {
@@ -119,7 +170,7 @@ EM.displayMap = function()
                 id: 'mapbox/satellite-v9',
                 accessToken: "pk.eyJ1IjoiY3lyaWxsZW1kYyIsImEiOiJjazIwamZ4cXIwMzN3M2hscmMxYjgxY2F5In0.0BmIVj6tTvXVd2BmmFo6Nw",
                 attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 20, 
+                maxZoom: 20,
             }
         ).addTo(EM.map);
 
@@ -171,6 +222,12 @@ EM.updateMarkers = function(reframe=false)
         }
 
         if (p.mtype === 'marker') {
+            // determine the icon type
+            let thisIcon = EM.marker_icons.unknown
+            if ( p.rtype !== '' ) {
+                thisIcon = EM.marker_icons[p.rtype];
+            }
+
             let marker = new L.marker([p.lat, p.lng], {
                 // options
             }).on('click', function() {
@@ -286,4 +343,5 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
         over.style.display = "none";
     });
 };
+
 
