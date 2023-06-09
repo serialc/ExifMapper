@@ -533,7 +533,10 @@ EM.updateMarkers = function(reframe=false)
             .then(function(data) {
                 L.geoJSON(data, {
                     style: function (feature) {
-                        return {color: 'orange'};
+                        return {
+                            "color": '#4682B4',
+                            "weight": 5 
+                        };
                     },
                     onEachFeature: function(feature, layer) {
                         layer.on({
