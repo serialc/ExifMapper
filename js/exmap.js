@@ -222,6 +222,7 @@ EM.submitResourceType = function(fn, rtype)
         if (data.response === 'good') {
             // get the fresh data
             EM.parsePhotosData(data.photos);
+            EM.updateMarkers();
 
             // hide the overlay
             let over = document.getElementById('overlay');
@@ -585,7 +586,7 @@ EM.updateMarkers = function(reframe=false)
                 L.geoJSON(data, {
                     style: function (feature) {
                         return {
-                            "color": '#4682B4',
+                            "color": '#FFD326',
                             "weight": 5 
                         };
                     },
