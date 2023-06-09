@@ -1,3 +1,54 @@
+EM = {
+    "marker_icons": {
+        "img": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-blue.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "360": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-red.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "vid": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-violet.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "audio": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-green.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "href": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-yellow.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        "unknown": new L.Icon({
+            iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-black.png',
+            shadowUrl: 'imgs/leaflet-color-markers/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }
 };
 
 window.onload = function(e)

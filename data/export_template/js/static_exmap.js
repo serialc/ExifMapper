@@ -235,6 +235,7 @@ EM.updateMarkers = function(reframe=false)
 
             let marker = new L.marker([p.lat, p.lng], {
                 // options
+                icon: thisIcon
             }).on('click', function() {
                 EM.showPic("data/", p.fn, p.rtype, p.mtype, p.comment);
             });
