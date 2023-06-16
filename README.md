@@ -14,6 +14,8 @@ It also allows:
 - exporting of a static webmap
 - parallel editing of resources (using WebSockets)
 
+![webmap with markers](imgs/example.png)
+
 ## Designed use case
 You are going on a field trip or excursion of some sort and you have told your students/participants to all enable location saving in their device (e.g., smart-phone, tablet) photo app.
 
