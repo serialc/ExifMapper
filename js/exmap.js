@@ -70,11 +70,14 @@ EM = {
 window.onload = function(e)
 {
     EM.loadData();
-    let ovrly = document.getElementById('overlay');
-    ovrly.style.display = 'none';
 
-    let fo = document.getElementById('files_overlay');
-    fo.style.display = 'none';
+    // hide the overlay
+    document.getElementById('overlay').style.display = 'none';
+
+    // hide the NoLoc data
+    document.getElementById('files_overlay').style.display = 'none';
+
+    // load the list of NoLoc resources
     EM.loadNoLoc();
 
     // websockets connection - this could cause an error but there's nothing to catch see:
@@ -99,6 +102,14 @@ window.onload = function(e)
         }
     };
     EM.conn = conn;
+
+    // button events
+    document.getElementById('close_overlay_link').addEventListener("click", (e) => {
+        // hide the overlay
+        document.getElementById('overlay').style.display = "none";
+        // kills any video, audio, content
+        document.getElementById('overlay_img').innerHTML = "";
+    });
 };
 
 EM.mapClick = function(e)
@@ -751,8 +762,8 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
 
     document.getElementById('overlay_buttons').innerHTML = btns_html;
 
-    let over = document.getElementById('overlay');
-    over.style.display = '';
+    // remove the 'none' from hiding the overlay - show it
+    document.getElementById('overlay').style.display = '';
 
     // disallow allow fullscreen for some rtypes
     let fsimg = document.getElementById('full_screen_link');
@@ -763,12 +774,6 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
         fsimg.style.display = '';
         fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See in new tab"><i class="fa fa-expand"></i></a>';
     }
-
-    let clsimg = document.getElementById('close_overlay_link');
-    clsimg.innerHTML = '<i class="fa fa-close" title="Close"></i>';
-    clsimg.addEventListener("click", (e) => {
-        over.style.display = "none";
-    });
 };
 
 EM.deletePrompt = function(fp, fn, rtype)

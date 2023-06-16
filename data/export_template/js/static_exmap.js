@@ -54,8 +54,17 @@ EM = {
 window.onload = function(e)
 {
     EM.loadData();
-    let ovrly = document.getElementById('overlay');
-    ovrly.style.display = 'none';
+
+    // hide the overlay
+    document.getElementById('overlay').style.display = 'none';
+
+    // button events
+    document.getElementById('close_overlay_link').addEventListener("click", (e) => {
+        // hide the overlay
+        document.getElementById('overlay').style.display = "none";
+        // kills any video, audio, content
+        document.getElementById('overlay_img').innerHTML = "";
+    });
 };
 
 EM.mapClick = function(e)
@@ -345,12 +354,6 @@ EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
         fsimg.style.display = '';
         fsimg.innerHTML = '<a href="' + fp + fn + '" target="_blank" title="See in new tab"><i class="fa fa-expand"></i></a>';
     }
-
-    let clsimg = document.getElementById('close_overlay_link');
-    clsimg.innerHTML = '<i class="fa fa-close" title="Close"></i>';
-    clsimg.addEventListener("click", (e) => {
-        over.style.display = "none";
-    });
 };
 
 
