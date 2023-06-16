@@ -54,7 +54,7 @@ for p in os.listdir(photo_path):
 
             # move photo files
             if coords[0] is None or coords[1] is None:
-                print("Has no coordinates")
+                print("Resource '" + p + "' has no coordinate information present")
                 # count 
                 c_noloc += 1
                 if not os.path.exists(noloc):

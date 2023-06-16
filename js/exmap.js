@@ -1,4 +1,20 @@
 EM = {
+    // OSM
+    "tileLayer": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "tileLayerOptions": {
+        "attribution": '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    },
+    // Mapbox
+    /*
+    "tileLayer": "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+    "tileLayerOptions": {
+            {
+                "id": 'mapbox/satellite-v9',
+                "accessToken": "ADD YOUR MAPBOX ACCESS TOKEN HERE",
+                "attribution": '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                "maxZoom": 20 
+            }
+    */
     "marker_icons": {
         "img": new L.Icon({
             iconUrl: 'imgs/leaflet-color-markers/marker-icon-2x-blue.png',
@@ -303,8 +319,11 @@ EM.relocatePhoto = function(fp, fn)
 
 EM.endRelocationCleanUp = function()
 {
-    // reset text of button
-    document.getElementById('btn_change_location').innerHTML = '(re)Locate';
+    // reset text of button, if it exists
+    let relocbtn = document.getElementById('btn_change_location');
+    if (!relocbtn === null) {
+        relocbtn.innerHTML = '(re)Locate';
+    }
 
     // deactivate next map click
     EM.onMapClick = undefined;
@@ -433,15 +452,7 @@ EM.displayMap = function()
     if (!EM.map) {
         EM.map = L.map('map').setView(EM.mean_ll, 10);
 
-        let tiles = L.tileLayer(
-            "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-            {
-                id: 'mapbox/satellite-v9',
-                accessToken: "pk.eyJ1IjoiY3lyaWxsZW1kYyIsImEiOiJjazIwamZ4cXIwMzN3M2hscmMxYjgxY2F5In0.0BmIVj6tTvXVd2BmmFo6Nw",
-                attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 20, 
-            }
-        ).addTo(EM.map);
+        let tiles = L.tileLayer( EM.tileLayer, EM.tileLayerOptions ).addTo(EM.map);
 
         // add controls
         let br_btns = L.control({position: 'bottomright'});
@@ -476,18 +487,28 @@ EM.displayMap = function()
     }
 };
 
+EM.closeOverlay = function()
+{
+    let over = document.getElementById('overlay');
+    over.style.display = 'none';
+};
+
 EM.newHrefMarker = function(e)
 {
     e.stopPropagation();
+
+    EM.endRelocationCleanUp();
+    EM.closeOverlay();
+    EM.toggleGeoList(true);
 
     let mapcont = document.getElementById('map');
     let new_marker_link = document.getElementById('new_marker_link');
 
     // toggle adding new marker
-    if (mapcont.classList.contains('crosshair')) {
+    if (new_marker_link.innerHTML == 'Cancel') {
         // remove crosshair cursor styling
         mapcont.classList.remove('crosshair');
-        new_marker_link.innerHTML = 'New Marker';
+        new_marker_link.innerHTML = 'New URL Marker';
 
         // deactivate map click 
         EM.onMapClick = undefined;
@@ -634,6 +655,9 @@ EM.updateMarkers = function(reframe=false)
 
 EM.showPic = function(fp, fn, rtype, mtype, comment, actions='all')
 {
+    // disable relocation (user may have been moving resource but need to cancel it)
+    EM.endRelocationCleanUp();
+
     // try to determine rtype when empty, ''
     if (rtype === '') {
         // get filename extension - the last .*
@@ -790,5 +814,4 @@ EM.toggleGeoList = function(hide)
         foua.style.display = 'none';
         fof.style.display = '';
     }
-
 };
